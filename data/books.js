@@ -20,7 +20,7 @@ window.BOOKS = [
     },
     parts: [
       { n: 1, title: "Phần Một", years: "1906 – 1923", ch: [1, 21], ready: true },
-      { n: 2, title: "Phần Hai", years: "1923 – 1928", ch: [22, 24] },
+      { n: 2, title: "Phần Hai", years: "1923 – 1928", ch: [22, 24], ready: true },
       { n: 3, title: "Phần Ba", years: "1928 – 1932", ch: [25, 31] },
       { n: 4, title: "Phần Bốn", years: "1932 – 1941", ch: [32, 38] },
       { n: 5, title: "Phần Năm", years: "1941 – 1948", ch: [39, 42] },
