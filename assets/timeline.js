@@ -9,7 +9,7 @@
 
    Dữ liệu một phần: (window.TL = window.TL || {})[N] = { people: {a, b}, intro, axisLabel, rows: [...] }
    Mỗi hàng: { year, age, shared, a: [sự kiện], b: [sự kiện], both: [sự kiện chung], aEmpty, bEmpty, note }
-   Mỗi sự kiện: { when, place, ch: [số chương], title, tease, body (HTML) } */
+   Mỗi sự kiện: { when, place, ch: [số chương], title, tease, body (HTML), tag (nhãn tùy chọn, ví dụ "Hai nhà") } */
 (function () {
   const CHEV = '<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2 4.2 6 8l4-3.8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   const events = new Map();
@@ -20,7 +20,7 @@
     events.set(id, ev);
     return `<details class="ev" data-id="${id}">
       <summary>
-        <span class="when"><span class="tag">${who}</span><span class="chip">${ev.when}</span>${ev.place ? `<span>${ev.place}</span>` : ""}</span>
+        <span class="when"><span class="tag">${ev.tag || who}</span><span class="chip">${ev.when}</span>${ev.place ? `<span>${ev.place}</span>` : ""}</span>
         <span class="ttl">${ev.title}</span>
         ${ev.tease ? `<span class="tease">${ev.tease}</span>` : ""}
         <span class="chev">${CHEV}</span>
