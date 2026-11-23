@@ -26,7 +26,7 @@
       }]
     },
     {
-      year: "1924", age: "18 tuổi",
+      year: "1924", age: "18 tuổi", bothLast: true,
       a: [{
         when: "1922 – 1924", place: "Khách sạn Plaza", ch: [23],
         title: "Chàng bồi bàn học đại học",

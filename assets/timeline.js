@@ -9,6 +9,7 @@
 
    Dữ liệu một phần: (window.TL = window.TL || {})[N] = { people: {a, b}, intro, axisLabel, rows: [...] }
    Mỗi hàng: { year, age, shared, a: [sự kiện], b: [sự kiện], both: [sự kiện chung], aEmpty, bEmpty, note }
+   Sự kiện chung hiện ngay dưới năm (xảy ra trước); đặt bothLast: true nếu nó xảy ra sau các sự kiện hai bên.
    Mỗi sự kiện: { when, place, ch: [số chương], title, tease, body (HTML), tag (nhãn tùy chọn, ví dụ "Hai nhà") } */
 (function () {
   const CHEV = '<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2 4.2 6 8l4-3.8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
@@ -61,7 +62,7 @@
   function rows(P) {
     const A = P.people.a, B = P.people.b;
     return P.rows.map(r => `
-      <section class="row${r.shared ? " shared" : ""}">
+      <section class="row${r.shared ? " shared" : ""}${r.both && r.both.length && !r.bothLast ? " both-first" : ""}">
         <div class="side a">${side(r.a, r.aEmpty, A.short)}</div>
         <div class="axis"><button class="year" type="button" aria-label="Mở mọi sự kiện năm ${r.year}"><span class="y">${r.year}</span>${r.age ? `<span class="age">${r.age}</span>` : ""}</button></div>
         <div class="side b">${side(r.b, r.bEmpty, B.short)}</div>

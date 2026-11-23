@@ -26,7 +26,7 @@ window.BOOKS = [
       { n: 5, title: "Phần Năm", years: "1941 – 1948", ch: [39, 42], ready: true },
       { n: 6, title: "Phần Sáu", years: "1948 – 1952", ch: [43, 46], ready: true },
       { n: 7, title: "Phần Bảy", years: "1952 – 1963", ch: [47, 56], ready: true },
-      { n: 8, title: "Phần Tám", years: "1963 – 1967", ch: [57, 60] }
+      { n: 8, title: "Phần Tám", years: "1963 – 1967", ch: [57, 60], ready: true }
     ]
   }
 ];
