@@ -46,7 +46,7 @@
   }
 
   function partsDone(book) {
-    return book.parts.filter(p => p.href).length;
+    return book.parts.filter(p => p.ready).length;
   }
 
   /* Trang chủ: danh sách mọi cuốn sách. base là đường dẫn từ trang chủ tới thư mục books/. */
@@ -69,20 +69,28 @@
       </ul>`;
   }
 
-  /* Trang một cuốn sách: giới thiệu và danh sách các phần. */
+  /* Trang một cuốn sách: giới thiệu, lối vào dòng thời gian và danh sách các phần. */
   function book(el, b) {
+    const tl = b.timeline;
     el.innerHTML = `
       <section class="intro">
         <div class="label">${esc(b.author)}${b.translator ? ` · ${esc(b.translator)} dịch` : ""}</div>
         <h1>${esc(b.title)}</h1>
         ${b.original ? `<div class="meta">Tên gốc: ${esc(b.original)}</div>` : ""}
         ${b.blurb ? `<p>${esc(b.blurb)}</p>` : ""}
+        <div><a class="btn primary" href="${esc(tl.href)}">Xem dòng thời gian ${esc(tl.years)}</a></div>
       </section>
+      <h2 class="sec-title">Các phần</h2>
       <ol class="parts">
-        ${b.parts.map(p => p.href
-          ? `<li><a class="pt" href="${esc(p.href)}">${esc(p.title)}</a><span class="yr">${esc(p.years || "")}</span><a class="st ok" href="${esc(p.href)}">Dòng thời gian</a></li>`
-          : `<li class="soon"><span class="pt">${esc(p.title)}</span><span class="yr">${esc(p.years || "")}</span><span class="st">Sắp có</span></li>`
-        ).join("")}
+        ${b.parts.map(p => `
+          <li>
+            <span class="pt">${esc(p.title)}</span>
+            <span class="yr">${esc(p.years || "")}</span>
+            <span class="chs">${p.ch ? `Chương ${p.ch[0]}–${p.ch[1]}` : ""}</span>
+            <span class="acts">${p.ready
+              ? `<a class="btn" href="${esc(tl.href)}#phan-${p.n}">Dòng thời gian</a>`
+              : `<span class="soon">Sắp có</span>`}</span>
+          </li>`).join("")}
       </ol>`;
   }
 

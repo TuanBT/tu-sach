@@ -1,19 +1,12 @@
 /* Hai Số Phận · Phần Một (1906 – 1923) · chương 1–21
-   Cột trái (a): Wladek Koskiewicz. Cột phải (b): William Kane.
-   Mỗi sự kiện: when (mốc thời gian), place, ch (số chương), title, tease (một dòng), body (HTML). */
-window.TIMELINE = {
-  book: "Hai Số Phận",
-  part: "Phần Một",
-  years: "1906 – 1923",
-  credit: "Jeffrey Archer · Nguyễn Việt Hải dịch",
-  born: { a: "Slonim, Ba Lan", date: "18 · 4 · 1906", b: "Boston, Mỹ" },
-  lede: "Hai cậu bé sinh cùng một ngày. Mỗi hàng dưới đây là một mốc thời gian, hai bên là điều xảy ra với từng người lúc đó. <b>Ấn vào sự kiện</b> để đọc chi tiết, <b>ấn vào năm</b> để mở cả hai bên.",
+   Cột trái (a): Wladek Koskiewicz. Cột phải (b): William Kane. */
+(window.TL = window.TL || {})[1] = {
+  intro: "Từ ngày cùng chào đời đến khi Wladek đặt chân lên đảo Ellis với cái tên Abel Rosnovski, còn William mồ côi cả cha lẫn mẹ năm 16 tuổi.",
   axisLabel: "Năm<br>tuổi",
   people: {
     a: { name: "Wladek Koskiewicz", short: "Wladek", initial: "W", sub: "về sau là Abel Rosnovski" },
     b: { name: "William Lowell Kane", short: "William", initial: "K", sub: "người thừa kế nhà Kane" }
   },
-  footer: "Tóm tắt Phần Một (chương 1–21) của <i>Hai Số Phận</i> (Kane and Abel), Jeffrey Archer, Nguyễn Việt Hải dịch.<br>Hai nhân vật sinh cùng ngày nên tuổi ở trục giữa là tuổi của cả hai.",
   rows: [
   {
     year: "1906", age: "Chào đời", shared: true,
