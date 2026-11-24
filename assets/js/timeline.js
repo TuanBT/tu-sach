@@ -99,14 +99,14 @@
       </header>
       <nav class="pnav" aria-label="Các phần">
         <div class="pnav-in">
-          ${book.parts.map(p => `<a href="#phan-${p.n}" data-n="${p.n}"${p.ready ? "" : ' class="soon"'}><b>${p.n}</b><span>${p.years}</span></a>`).join("")}
+          ${book.parts.map(p => `<a href="#phan-${p.n}" data-n="${p.n}"${p.timeline ? "" : ' class="soon"'}><b>${p.n}</b><span>${p.years}</span></a>`).join("")}
         </div>
         <div class="pnav-act">
           <button class="btn" type="button" data-all="open">Mở tất cả</button>
           <button class="btn" type="button" data-all="close">Thu gọn</button>
         </div>
       </nav>
-      ${book.parts.map(p => p.ready
+      ${book.parts.map(p => p.timeline
         ? `<section class="psec pending" id="phan-${p.n}" data-n="${p.n}"><div class="loading">Đang tải ${p.title}…</div></section>`
         : `<section class="psec soon" id="phan-${p.n}" data-n="${p.n}">${partHead(p, "Dòng thời gian của phần này đang được cập nhật.")}</section>`).join("")}
       ${T.footer ? `<footer class="foot">${T.footer}</footer>` : ""}`;
@@ -116,7 +116,7 @@
       if (jobs.has(n)) return jobs.get(n);
       const sec = el.querySelector(`#phan-${n}`);
       const meta = book.parts.find(p => p.n === n);
-      if (!sec || !meta || !meta.ready) return Promise.resolve(sec);
+      if (!sec || !meta || !meta.timeline) return Promise.resolve(sec);
       const job = new Promise(resolve => {
         const done = () => {
           const P = (window.TL || {})[n];
@@ -167,7 +167,7 @@
       const m = /^#phan-(\d+)$/.exec(location.hash);
       if (!m) return;
       const n = +m[1];
-      await Promise.all(book.parts.filter(p => p.n <= n && p.ready).map(p => load(p.n)));
+      await Promise.all(book.parts.filter(p => p.n <= n && p.timeline).map(p => load(p.n)));
       const sec = el.querySelector(`#phan-${n}`);
       if (sec) requestAnimationFrame(() => sec.scrollIntoView({ block: "start" }));
       setCurrent(n);

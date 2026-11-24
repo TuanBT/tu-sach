@@ -1,0 +1,11 @@
+# File sách và audio không bao giờ đưa lên (bản quyền, dung lượng). Xem README, mục Bản quyền.
+*.epub
+*.azw3
+*.mobi
+*.pdf
+*.mp3
+*.m4a
+*.wav
+*.aac
+*.ogg
+.DS_Store

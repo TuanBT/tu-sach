@@ -5,8 +5,9 @@
      timeline: {...}   dòng thời gian, ở books/<slug>/timeline/
      summary:  {...}   tóm tắt,         ở books/<slug>/summary/   (chưa dùng)
      audio:    {...}   audio,           ở books/<slug>/audio/     (chưa dùng)
-   parts: các phần của cuốn sách. Phần nào đã có dòng thời gian thì đặt ready: true;
-   chưa có thì trang sẽ hiện "Sắp có". */
+   parts: các phần của cuốn sách. Mỗi phần đánh dấu dạng nào đã xong cho phần đó:
+     { n: 1, title: "Phần Một", years: "…", ch: [1, 21], timeline: true, summary: true }
+   Phần chưa có dạng nào thì trang hiện "Sắp có". */
 window.BOOKS = [
   {
     slug: "hai-so-phan",
@@ -23,14 +24,14 @@ window.BOOKS = [
       footer: "Tóm tắt từ <i>Hai Số Phận</i> (Kane and Abel), Jeffrey Archer, Nguyễn Việt Hải dịch. Số chương theo thứ tự trong bản ebook.<br>Hai nhân vật chính sinh cùng ngày nên tuổi ở trục giữa là tuổi của cả hai."
     },
     parts: [
-      { n: 1, title: "Phần Một", years: "1906 – 1923", ch: [1, 21], ready: true },
-      { n: 2, title: "Phần Hai", years: "1923 – 1928", ch: [22, 24], ready: true },
-      { n: 3, title: "Phần Ba", years: "1928 – 1932", ch: [25, 31], ready: true },
-      { n: 4, title: "Phần Bốn", years: "1932 – 1941", ch: [32, 38], ready: true },
-      { n: 5, title: "Phần Năm", years: "1941 – 1948", ch: [39, 42], ready: true },
-      { n: 6, title: "Phần Sáu", years: "1948 – 1952", ch: [43, 46], ready: true },
-      { n: 7, title: "Phần Bảy", years: "1952 – 1963", ch: [47, 56], ready: true },
-      { n: 8, title: "Phần Tám", years: "1963 – 1967", ch: [57, 60], ready: true }
+      { n: 1, title: "Phần Một", years: "1906 – 1923", ch: [1, 21], timeline: true },
+      { n: 2, title: "Phần Hai", years: "1923 – 1928", ch: [22, 24], timeline: true },
+      { n: 3, title: "Phần Ba", years: "1928 – 1932", ch: [25, 31], timeline: true },
+      { n: 4, title: "Phần Bốn", years: "1932 – 1941", ch: [32, 38], timeline: true },
+      { n: 5, title: "Phần Năm", years: "1941 – 1948", ch: [39, 42], timeline: true },
+      { n: 6, title: "Phần Sáu", years: "1948 – 1952", ch: [43, 46], timeline: true },
+      { n: 7, title: "Phần Bảy", years: "1952 – 1963", ch: [47, 56], timeline: true },
+      { n: 8, title: "Phần Tám", years: "1963 – 1967", ch: [57, 60], timeline: true }
     ]
   }
 ];

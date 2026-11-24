@@ -38,6 +38,7 @@ books/
     summary/                Tóm tắt (chưa có cuốn nào)
     audio/                  Audio (chưa có cuốn nào)
 tools/
+  check.mjs                 Kiểm tra toàn bộ trước khi commit: node tools/check.mjs
   make-images.sh            Tạo lại icon và ảnh xem trước bằng Chrome headless
   og.html                   Mẫu ảnh xem trước 1200×630
   icon-maskable.svg         Icon không bo góc cho Android và iPhone
@@ -46,6 +47,14 @@ tools/
 URL đi theo thư mục: `tusach.buitientuan.com/books/hai-so-phan/timeline/#phan-3`.
 
 Trang tự đọc slug từ tên thư mục rồi tìm cuốn sách trong `data/books.js`, nên phần `<body>` của các file `index.html` giống hệt nhau giữa các cuốn sách. Chỉ phần `<head>` khác nhau ở tiêu đề, mô tả và ảnh xem trước, vì Zalo hay Facebook đọc thẳng các thẻ này mà không chạy JavaScript.
+
+## Làm cùng AI
+
+Quy chuẩn chi tiết (văn phong, định dạng từng dạng nội dung, cách đọc ebook, kiểm tra, commit) nằm trong skill `.claude/skills/tu-sach/`. `CLAUDE.md` nhắc Claude dùng skill này cho mọi việc về nội dung sách.
+
+Trước khi commit, chạy `node tools/check.mjs`: script kiểm tra danh mục, file dữ liệu từng phần, số chương, thẻ chia sẻ, ảnh, file không được đưa lên, rồi mở thử mọi trang bằng Chrome headless. Có lỗi (✗) thì phải sửa.
+
+Mỗi phần trong `parts` đánh dấu dạng nào đã xong cho phần đó: `timeline: true`, `summary: true`, `audio: true`.
 
 ## Thêm một cuốn sách mới
 
@@ -70,7 +79,7 @@ Thêm cho một cuốn sách:
 
 1. Chép `books/hai-so-phan/timeline/index.html` sang `books/<slug>/timeline/index.html` và sửa các thẻ trong `<head>` như trang sách.
 2. Tạo `books/<slug>/timeline/data/phan-N.js` cho từng phần.
-3. Trong `data/books.js`: thêm object `timeline` (years, credit, lede, footer, born tùy chọn) và danh sách `parts`. Phần nào đã có dữ liệu thì đặt `ready: true`; chưa có thì hiện "Sắp có".
+3. Trong `data/books.js`: thêm object `timeline` (years, credit, lede, footer, born tùy chọn) và danh sách `parts`. Phần nào đã có dữ liệu thì đặt `timeline: true` cho phần đó; phần chưa có dạng nào thì hiện "Sắp có".
 
 Định dạng dữ liệu một phần:
 

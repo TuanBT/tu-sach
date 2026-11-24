@@ -141,8 +141,10 @@
     return b || null;
   }
 
+  /* Số phần đã có ít nhất một dạng nội dung. */
   function partsDone(book) {
-    return (book.parts || []).filter(p => p.ready).length;
+    const fs = formatsOf(book);
+    return (book.parts || []).filter(p => fs.some(f => p[f.key])).length;
   }
 
   /* ---------- Trang chủ: danh sách mọi cuốn sách ---------- */
@@ -181,7 +183,6 @@
     bar($("bar"), [{ t: SITE, href: "../../" }, { t: b.title }]);
 
     const fs = formatsOf(b);
-    const tl = b.timeline;
     $("app").innerHTML = `
       <section class="intro">
         <div class="label">${esc(b.author)}${b.translator ? ` · ${esc(b.translator)} dịch` : ""}</div>
@@ -206,9 +207,8 @@
             <span class="pt">${esc(p.title)}</span>
             <span class="yr">${esc(p.years || "")}</span>
             <span class="chs">${p.ch ? `Chương ${p.ch[0]}–${p.ch[1]}` : ""}</span>
-            <span class="acts">${tl && p.ready
-              ? `<a class="btn" href="timeline/#phan-${p.n}">Dòng thời gian</a>`
-              : `<span class="soon">Sắp có</span>`}</span>
+            <span class="acts">${fs.filter(f => p[f.key]).map(f => `<a class="btn" href="${f.dir}#phan-${p.n}">${f.label}</a>`).join("")
+              || `<span class="soon">Sắp có</span>`}</span>
           </li>`).join("")}
       </ol>` : ""}`;
   }
