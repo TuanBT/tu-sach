@@ -1,6 +1,6 @@
-/* Sổ tay đọc sách · dòng thời gian toàn bộ một cuốn sách.
-   Timeline.full(el, book) vẽ khung trang (mở đầu, thanh chọn phần, chỗ cho từng phần),
-   rồi chỉ tải file dữ liệu của một phần (data/phan-N.js) khi người xem cuộn tới hoặc chọn phần đó.
+/* Sổ tay đọc sách · dòng thời gian toàn bộ một cuốn sách (books/<slug>/timeline/).
+   Timeline.page() tìm cuốn sách theo đường dẫn, vẽ khung trang (mở đầu, thanh chọn phần, chỗ cho từng phần),
+   rồi chỉ tải file dữ liệu của một phần (timeline/data/phan-N.js) khi người xem cuộn tới hoặc chọn phần đó.
 
    Hiệu năng:
    - Mỗi phần là một file riêng, nạp bằng thẻ <script> khi cần (chạy được cả khi mở file trực tiếp trên máy).
@@ -129,7 +129,7 @@
           resolve(sec);
         };
         const s = document.createElement("script");
-        s.src = `${T.data}phan-${n}.js`;
+        s.src = `data/phan-${n}.js`;
         s.onload = done;
         s.onerror = done;
         document.head.appendChild(s);
@@ -192,5 +192,18 @@
     });
   }
 
-  window.Timeline = { full };
+  /* Trang books/<slug>/timeline/index.html */
+  function page() {
+    const book = Site.currentBook("../../../");
+    if (!book) return;
+    document.title = `${book.title} · Dòng thời gian`;
+    Site.bar(document.getElementById("bar"), [
+      { t: Site.SITE, href: "../../../" },
+      { t: book.title, href: "../" },
+      { t: "Dòng thời gian" }
+    ]);
+    full(document.getElementById("app"), book);
+  }
+
+  window.Timeline = { full, page };
 })();

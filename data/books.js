@@ -1,6 +1,12 @@
 /* Danh mục tủ sách. Thêm một cuốn mới = thêm một object vào mảng này
    và tạo thư mục books/<slug>/ (xem README.md).
-   Phần nào đã có dòng thời gian thì đặt ready: true; chưa có thì trang sẽ hiện "Sắp có". */
+
+   Mỗi dạng nội dung là một object riêng, có object nào thì trang sách hiện dạng đó:
+     timeline: {...}   dòng thời gian, ở books/<slug>/timeline/
+     summary:  {...}   tóm tắt,         ở books/<slug>/summary/   (chưa dùng)
+     audio:    {...}   audio,           ở books/<slug>/audio/     (chưa dùng)
+   parts: các phần của cuốn sách. Phần nào đã có dòng thời gian thì đặt ready: true;
+   chưa có thì trang sẽ hiện "Sắp có". */
 window.BOOKS = [
   {
     slug: "hai-so-phan",
@@ -10,8 +16,6 @@ window.BOOKS = [
     translator: "Nguyễn Việt Hải",
     blurb: "Hai người đàn ông sinh cùng ngày 18/4/1906, một người trong rừng Ba Lan, một người trong gia đình chủ ngân hàng ở Boston. Cuộc đời họ chạy song song suốt sáu mươi năm.",
     timeline: {
-      href: "timeline.html",
-      data: "data/",
       years: "1906 – 1967",
       credit: "Jeffrey Archer · Nguyễn Việt Hải dịch",
       born: { aName: "Wladek", a: "Slonim, Ba Lan", date: "18 · 4 · 1906", b: "Boston, Mỹ", bName: "William" },

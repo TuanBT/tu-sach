@@ -3,29 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Hai Số Phận · Dòng thời gian</title>
+<title>Dòng thời gian · Sổ tay đọc sách</title>
 <script>try{var t=localStorage.getItem("sotay-theme");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@500;600;700;800&family=Source+Sans+3:ital,wght@0,400;0,600;1,400&display=swap">
-<link rel="stylesheet" href="../../assets/style.css">
+<link rel="stylesheet" href="../../../assets/css/style.css">
 </head>
 <body>
 <div class="wrap tl-page">
   <div class="topbar" id="bar"></div>
   <div id="app"></div>
 </div>
-<script src="../../data/books.js"></script>
-<script src="../../assets/site.js"></script>
-<script src="../../assets/timeline.js"></script>
-<script>
-  const book = window.BOOKS.find(b => b.slug === "hai-so-phan");
-  Site.bar(document.getElementById("bar"), [
-    { t: "Sổ tay đọc sách", href: "../../" },
-    { t: book.title, href: "./" },
-    { t: "Dòng thời gian" }
-  ]);
-  Timeline.full(document.getElementById("app"), book);
-</script>
+<!-- Trang dòng thời gian. Giống hệt nhau cho mọi cuốn: slug lấy từ tên thư mục, dữ liệu ở data/phan-N.js. -->
+<script src="../../../data/books.js"></script>
+<script src="../../../assets/js/site.js"></script>
+<script src="../../../assets/js/timeline.js"></script>
+<script>Timeline.page()</script>
 </body>
 </html>

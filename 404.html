@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Không tìm thấy trang · Sổ tay đọc sách</title>
+<script>
+  /* GitHub Pages trả trang này cho mọi đường dẫn không có, nên dùng đường dẫn tuyệt đối (gốc là tusach.buitientuan.com).
+     Chuyển link cũ sang chỗ mới:
+       /books/<slug>/timeline.html#phan-N  ->  /books/<slug>/timeline/#phan-N
+       /books/<slug>/phan-N.html           ->  /books/<slug>/timeline/#phan-N */
+  (function () {
+    var p = location.pathname.replace(/^\/tu-sach(?=\/)/, ""), m;
+    if ((m = /^(\/books\/[^/]+\/)timeline\.html$/.exec(p))) location.replace(m[1] + "timeline/" + location.hash);
+    else if ((m = /^(\/books\/[^/]+\/)phan-(\d+)\.html$/.exec(p))) location.replace(m[1] + "timeline/#phan-" + m[2]);
+  })();
+  try{var t=localStorage.getItem("sotay-theme");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@500;600;700;800&family=Source+Sans+3:ital,wght@0,400;0,600;1,400&display=swap">
+<link rel="stylesheet" href="/assets/css/style.css">
+</head>
+<body>
+<div class="wrap narrow">
+  <div class="topbar" id="bar"></div>
+  <section class="intro">
+    <div class="label">404</div>
+    <h1>Không tìm thấy trang</h1>
+    <p>Trang này không có hoặc đã được chuyển đi.</p>
+    <div><a class="btn primary" href="/">Về tủ sách</a></div>
+  </section>
+</div>
+<script src="/assets/js/site.js"></script>
+<script>Site.bar(document.getElementById("bar"), [{ t: Site.SITE, href: "/" }, { t: "Không tìm thấy" }])</script>
+</body>
+</html>

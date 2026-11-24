@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@500;600;700;800&family=Source+Sans+3:ital,wght@0,400;0,600;1,400&display=swap">
-<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
 <div class="wrap narrow">
@@ -16,10 +16,7 @@
   <div id="app"></div>
 </div>
 <script src="data/books.js"></script>
-<script src="assets/site.js"></script>
-<script>
-  Site.bar(document.getElementById("bar"), [{ t: "Sổ tay đọc sách" }]);
-  Site.home(document.getElementById("app"), window.BOOKS);
-</script>
+<script src="assets/js/site.js"></script>
+<script>Site.homePage()</script>
 </body>
 </html>
