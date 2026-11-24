@@ -24,7 +24,7 @@ data/
   books.js                  Danh mục sách: tên, tác giả, các phần, có những dạng nội dung nào
 assets/
   css/style.css             Giao diện dùng chung, gồm cả màu sáng/tối
-  js/site.js                Thanh đường dẫn, nút sáng/tối, trang chủ, trang giới thiệu sách
+  js/site.js                Thanh đường dẫn, nút sáng/tối, trang chủ, trang giới thiệu sách, Google Analytics
   js/timeline.js            Trang dòng thời gian
   icons/                    Icon trang web và ứng dụng (icon.svg là bản gốc)
   img/og.png                Ảnh xem trước khi chia sẻ link trang chủ
@@ -127,6 +127,12 @@ GitHub giới hạn mỗi file 100 MB và cả trang khoảng 1 GB, nên không 
 Mỗi trang có các thẻ `og:` trong `<head>`, trỏ tới ảnh 1200×630: `assets/img/og.png` cho trang chủ, `books/<slug>/og.png` cho từng cuốn sách. Ảnh được tạo từ mẫu `tools/og.html` bằng `tools/make-images.sh og …`.
 
 Zalo và Facebook lưu ảnh xem trước một thời gian. Nếu đổi ảnh mà link cũ vẫn hiện ảnh cũ, vào [Facebook Sharing Debugger](https://developers.facebook.com/tools/debug/) và bấm "Scrape Again".
+
+## Thống kê lượt xem
+
+Dùng Google Analytics 4: property `tusach` (Measurement ID `G-6YVSF3Q211`) trong tài khoản GA `tuan`, luồng web `https://tusach.buitientuan.com`. Xem số liệu ở [analytics.google.com](https://analytics.google.com).
+
+Mã GA nằm trong `assets/js/site.js`, không dán vào từng file HTML. Mọi trang đều nạp file này nên trang sách mới tự được đếm. Mã chỉ chạy khi tên miền là `tusach.buitientuan.com`, nên mở file trên máy hay chạy `tools/check.mjs` không làm sai số liệu.
 
 ## Hiệu năng
 

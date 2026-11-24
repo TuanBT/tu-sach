@@ -18,6 +18,21 @@
     addEventListener("load", () => navigator.serviceWorker.register(ROOT + "sw.js").catch(() => {}));
   }
 
+  /* Google Analytics 4: property "tusach" trong tài khoản GA "tuan". Mọi trang đều nạp file này nên
+     tự được đếm, không dán mã GA vào từng file HTML. Chỉ chạy trên tên miền thật: mở file trên máy
+     hay chạy tools/check.mjs không bị tính lượt xem. */
+  const GA = "G-6YVSF3Q211";
+  if (location.hostname === "tusach.buitientuan.com") {
+    window.dataLayer = window.dataLayer || [];
+    window.gtag = function () { window.dataLayer.push(arguments); };
+    gtag("js", new Date());
+    gtag("config", GA);
+    const s = document.createElement("script");
+    s.async = true;
+    s.src = "https://www.googletagmanager.com/gtag/js?id=" + GA;
+    document.head.append(s);
+  }
+
   /* Các dạng nội dung một cuốn sách có thể có. Sách có dạng nào thì trong data/books.js
      có object cùng tên (ví dụ book.timeline). dir là thư mục con trong books/<slug>/. */
   const FORMATS = [

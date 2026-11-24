@@ -19,7 +19,7 @@ Trang tĩnh trên GitHub Pages (deploy từ nhánh `main`), tiếng Việt, khô
 
 ```
 data/books.js                 Danh mục sách: thông tin sách, các phần, dạng nội dung nào đã có
-assets/js/site.js             Trang chủ, trang sách, FORMATS (danh sách dạng nội dung)
+assets/js/site.js             Trang chủ, trang sách, FORMATS (danh sách dạng nội dung), Google Analytics
 assets/js/timeline.js         Vẽ trang dòng thời gian
 assets/css/style.css          Giao diện chung (sáng/tối)
 books/<slug>/index.html       Trang giới thiệu sách
@@ -63,7 +63,7 @@ tools/make-images.sh          Tạo ảnh chia sẻ og.png và icon
    }
    ```
    Mỗi phần đánh dấu dạng nào đã xong cho phần đó (`timeline: true`, `summary: true`, `audio: true`). Chỉ đánh dấu khi file dữ liệu của phần đó đã có thật.
-4. **Trang sách:** chép `books/hai-so-phan/index.html` sang `books/<slug>/index.html`. Phần `<body>` giữ nguyên (trang tự đọc slug từ tên thư mục). Trong `<head>` sửa: `<title>`, `meta description`, `canonical`, `og:title`, `og:description`, `og:url`, `og:image`. URL luôn dạng `https://tusach.buitientuan.com/books/<slug>/`. Zalo, Facebook đọc thẳng các thẻ này mà không chạy JavaScript, nên chúng phải đúng ngay trong file.
+4. **Trang sách:** chép `books/hai-so-phan/index.html` sang `books/<slug>/index.html`. Phần `<body>` giữ nguyên (trang tự đọc slug từ tên thư mục). Trong `<head>` sửa: `<title>`, `meta description`, `canonical`, `og:title`, `og:description`, `og:url`, `og:image`. URL luôn dạng `https://tusach.buitientuan.com/books/<slug>/`. Zalo, Facebook đọc thẳng các thẻ này mà không chạy JavaScript, nên chúng phải đúng ngay trong file. Google Analytics nằm trong `assets/js/site.js` mà `<body>` đã nạp sẵn, nên trang mới tự được đếm: không dán thêm mã GA vào HTML.
 5. **Ảnh chia sẻ:**
    ```sh
    tools/make-images.sh og books/<slug>/og.png "Sổ tay đọc sách" "<Tên sách>" "<Tên gốc · Tác giả>" "<Dạng nội dung · năm nếu có>"
