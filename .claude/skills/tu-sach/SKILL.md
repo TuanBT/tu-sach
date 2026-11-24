@@ -21,6 +21,7 @@ Trang tĩnh trên GitHub Pages (deploy từ nhánh `main`), tiếng Việt, khô
 data/books.js                 Danh mục sách: thông tin sách, các phần, dạng nội dung nào đã có
 assets/js/site.js             Trang chủ, trang sách, FORMATS (danh sách dạng nội dung), Google Analytics
 assets/js/timeline.js         Vẽ trang dòng thời gian
+assets/js/summary.js          Vẽ trang tóm tắt (nạp từng phần dùng chung Site.lazyParts với dòng thời gian)
 assets/css/style.css          Giao diện chung (sáng/tối)
 books/<slug>/index.html       Trang giới thiệu sách
 books/<slug>/og.png           Ảnh xem trước khi chia sẻ link

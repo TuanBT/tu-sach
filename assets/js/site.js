@@ -161,6 +161,212 @@
     const fs = formatsOf(book);
     return (book.parts || []).filter(p => fs.some(f => p[f.key])).length;
   }
+  /* Phần chứa chương c (số chương theo thứ tự trong ebook). */
+  const partOf = (book, c) => (book.parts || []).find(p => p.ch && c >= p.ch[0] && c <= p.ch[1]) || null;
+
+  /* Nạp một file JS bằng thẻ <script> (chạy được cả khi mở file trực tiếp trên máy). Trả về true nếu nạp được. */
+  function loadScript(src) {
+    return new Promise(resolve => {
+      const s = document.createElement("script");
+      s.src = src;
+      s.onload = () => resolve(true);
+      s.onerror = () => resolve(false);
+      document.head.appendChild(s);
+    });
+  }
+
+  /* ---------- Ghi nhớ chỗ đang đọc ----------
+     Trang chia theo phần ghi lại phần đang xem; trang sách hiện nút "Đọc tiếp" dẫn về đúng chỗ đó. */
+  const POS = "sotay-doc:";
+  function remember(slug, key, n) {
+    try { localStorage.setItem(POS + slug, JSON.stringify({ key, n })); } catch (e) {}
+  }
+  function lastPos(book) {
+    try {
+      const v = JSON.parse(localStorage.getItem(POS + book.slug) || "null");
+      const f = v && FORMATS.find(x => x.key === v.key && book[x.key]);
+      const p = f && (book.parts || []).find(x => x.n === v.n && x[f.key]);
+      return p ? { f, p } : null;
+    } catch (e) { return null; }
+  }
+
+  /* ---------- Trang chia theo phần (dòng thời gian, tóm tắt) ----------
+     Mỗi phần đã có dữ liệu là <section class="psec pending" id="phan-N" data-n="N"> có sẵn trong el.
+     - Chỉ nạp data/phan-N.js khi phần sắp cuộn tới. Nạp xong gọi render(sec, part, dữ liệu) rồi bỏ class pending
+       (class chỉ còn đúng "psec", tools/check.mjs dựa vào điều này). Lỗi thì hiện "Không tải được…".
+     - Đánh dấu phần đang xem trên thanh .pnav-in và ghi nhớ cho nút Đọc tiếp.
+     - Mở trang với #phan-N, hoặc #chuong-N (phần tử có data-ch chứa N), thì nạp các phần từ 1 tới phần đó rồi mới cuộn,
+       để trang không bị xô lệch sau khi cuộn.
+     opts: { key: "timeline", global: "TL", render } */
+  function lazyParts(el, book, opts) {
+    const has = p => !!(p && p[opts.key]);
+    const jobs = new Map();
+    function load(n) {
+      if (jobs.has(n)) return jobs.get(n);
+      const sec = el.querySelector(`#phan-${n}`);
+      const meta = book.parts.find(p => p.n === n);
+      if (!sec || !has(meta)) return Promise.resolve(sec);
+      const job = loadScript(`data/phan-${n}.js`).then(() => {
+        const P = (window[opts.global] || {})[n];
+        if (P) {
+          opts.render(sec, meta, P);
+          sec.classList.remove("pending");
+        } else {
+          const l = sec.querySelector(".loading");
+          if (l) l.textContent = "Không tải được phần này. Hãy thử tải lại trang.";
+        }
+        return sec;
+      });
+      jobs.set(n, job);
+      return job;
+    }
+
+    const lazy = new IntersectionObserver(entries => entries.forEach(e => {
+      if (e.isIntersecting) { lazy.unobserve(e.target); load(+e.target.dataset.n); }
+    }), { rootMargin: "1200px 0px" });
+    el.querySelectorAll(".psec.pending").forEach(s => lazy.observe(s));
+
+    const links = [...el.querySelectorAll(".pnav-in a")];
+    const strip = el.querySelector(".pnav-in");
+    function setCurrent(n) {
+      links.forEach(a => {
+        const on = +a.dataset.n === n;
+        a.setAttribute("aria-current", on ? "true" : "false");
+        if (on && strip) {
+          const l = a.offsetLeft, r = l + a.offsetWidth;
+          if (l < strip.scrollLeft || r > strip.scrollLeft + strip.clientWidth) strip.scrollLeft = l - 12;
+        }
+      });
+    }
+    const spy = new IntersectionObserver(entries => entries.forEach(e => {
+      if (!e.isIntersecting) return;
+      const n = +e.target.dataset.n;
+      setCurrent(n);
+      if (has(book.parts.find(p => p.n === n))) remember(book.slug, opts.key, n);
+    }), { rootMargin: "-40% 0px -55% 0px" });
+    el.querySelectorAll(".psec").forEach(s => spy.observe(s));
+
+    /* Lần nhảy đầu (mở trang bằng link có #) đợi font tải xong rồi nhảy thẳng, không cuộn mượt:
+       font về sau làm đổi chiều cao chữ, cuộn mượt dở dang sẽ dừng sai chỗ. */
+    let first = true;
+    async function jump() {
+      const m = /^#(phan|chuong)-(\d+)$/.exec(location.hash);
+      if (!m) return;
+      const part = m[1] === "phan" ? book.parts.find(p => p.n === +m[2]) : partOf(book, +m[2]);
+      if (!part) return;
+      await Promise.all(book.parts.filter(p => p.n <= part.n && has(p)).map(p => load(p.n)));
+      if (first && document.fonts) await document.fonts.ready;
+      const target = (m[1] === "chuong" && el.querySelector(`[data-ch~="${m[2]}"]`)) || el.querySelector(`#phan-${part.n}`);
+      const behavior = first ? "instant" : "smooth";
+      first = false;
+      if (target) requestAnimationFrame(() => target.scrollIntoView({ block: "start", behavior }));
+      setCurrent(part.n);
+    }
+    window.addEventListener("hashchange", jump);
+    if (location.hash) jump(); else if (book.parts.length) setCurrent(book.parts[0].n);
+    return { load };
+  }
+
+  /* Thanh chọn phần: một nút cho mỗi phần, phần chưa có dạng key thì mờ đi (class soon). */
+  function partNav(book, key, extra) {
+    return `<nav class="pnav" aria-label="Các phần">
+      <div class="pnav-in">
+        ${book.parts.map(p => `<a href="#phan-${p.n}" data-n="${p.n}"${p[key] ? "" : ' class="soon"'}><b>${p.n}</b><span>${esc(p.years || (p.ch ? `Ch. ${p.ch[0]}–${p.ch[1]}` : ""))}</span></a>`).join("")}
+      </div>
+      ${extra || ""}
+    </nav>`;
+  }
+
+  /* ---------- Tìm trong sách ----------
+     Lần đầu gõ vào ô tìm thì nạp mọi file dữ liệu đã có của cuốn sách (dòng thời gian, tóm tắt), rồi tìm ngay trên máy.
+     Gõ không dấu cũng tìm được: "rosnovski", "nha tu", "zaphia". */
+  const fold = s => s.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/đ/g, "d").replace(/Đ/g, "D").toLowerCase();
+  const plain = h => String(h || "").replace(/<\/(p|div|li|h\d)>|<br\s*\/?>/gi, " ").replace(/<[^>]+>/g, "")
+    .replace(/&nbsp;/g, " ").replace(/\s+/g, " ").trim().normalize("NFC");
+
+  function buildIndex(book) {
+    const out = [];
+    const add = (where, href, title, html) => {
+      const text = plain([html].flat().join(" "));
+      out.push({ where, href, title: plain(title), text, f: fold(text), ft: fold(plain(title)) });
+    };
+    for (const p of book.parts || []) {
+      const T = book.timeline && p.timeline && (window.TL || {})[p.n];
+      const S = book.summary && p.summary && (window.SUM || {})[p.n];
+      if (S) for (const c of S.chapters || []) {
+        add(`Tóm tắt · ${p.title} · Chương ${chLabel(c.ch)}`, `summary/#chuong-${c.ch[0]}`, c.title, [c.tease, c.body, (c.points || []).join(" ")]);
+      }
+      if (T) for (const r of T.rows || []) for (const k of ["a", "b", "both"]) for (const e of r[k] || []) {
+        add(`Dòng thời gian · ${p.title} · ${plain(e.when)}`, `timeline/#phan-${p.n}`, e.title, [e.tease, e.body]);
+      }
+    }
+    return out;
+  }
+  /* "7–8" cho các chương liền nhau, "1 · 3" cho các chương rời. */
+  function chLabel(ch) {
+    if (!ch || !ch.length) return "";
+    const seq = ch.every((c, i) => !i || c === ch[i - 1] + 1);
+    return ch.length > 1 && seq ? `${ch[0]}–${ch[ch.length - 1]}` : ch.join(" · ");
+  }
+  /* Đoạn trích quanh chỗ khớp đầu tiên, tô các từ khớp bằng <mark>. */
+  function snippet(e, words) {
+    const at = Math.max(0, e.f.indexOf(words[0]));
+    let a = Math.max(0, at - 70), b = Math.min(e.text.length, at + 150);
+    if (a > 0) a = e.text.indexOf(" ", a) + 1;
+    if (b < e.text.length) b = e.text.lastIndexOf(" ", b);
+    const marks = [];
+    if (e.f.length === e.text.length) for (const w of words) {
+      for (let i = e.f.indexOf(w, a); i >= 0 && i < b; i = e.f.indexOf(w, i + w.length)) marks.push([i, Math.min(b, i + w.length)]);
+    }
+    marks.sort((x, y) => x[0] - y[0]);
+    let html = "", pos = a;
+    for (const [s, t] of marks) {
+      if (s < pos) continue;
+      html += esc(e.text.slice(pos, s)) + "<mark>" + esc(e.text.slice(s, t)) + "</mark>";
+      pos = t;
+    }
+    html += esc(e.text.slice(pos, b));
+    return (a > 0 ? "… " : "") + html + (b < e.text.length ? " …" : "");
+  }
+
+  function searchBox(book) {
+    const wrap = document.createElement("div");
+    wrap.className = "find";
+    wrap.innerHTML = `<input type="search" id="find" autocomplete="off" placeholder="Tên người, nơi chốn, sự kiện… (gõ không dấu cũng được)" aria-label="Tìm trong sách">
+      <div class="find-out" aria-live="polite"></div>`;
+    const input = wrap.querySelector("input"), out = wrap.querySelector(".find-out");
+    let index = null, loading = null, timer = 0;
+
+    function ready() {
+      if (index) return Promise.resolve(index);
+      if (!loading) {
+        const files = [];
+        for (const f of formatsOf(book)) if (f.key !== "audio")
+          for (const p of book.parts || []) if (p[f.key]) files.push(`${f.dir}data/phan-${p.n}.js`);
+        loading = Promise.all(files.map(loadScript)).then(() => (index = buildIndex(book)));
+      }
+      return loading;
+    }
+    async function run() {
+      const q = fold(input.value.trim());
+      if (q.length < 2) { out.innerHTML = ""; return; }
+      out.innerHTML = `<div class="find-n">Đang tìm…</div>`;
+      const words = q.split(/\s+/).filter(Boolean);
+      const all = await ready();
+      if (fold(input.value.trim()) !== q) return;
+      const hits = all.filter(e => words.every(w => e.f.includes(w) || e.ft.includes(w)));
+      const MAX = 40;
+      out.innerHTML = `<div class="find-n">${hits.length ? `${hits.length} chỗ khớp${hits.length > MAX ? `, hiện ${MAX} chỗ đầu` : ""}` : "Không thấy chỗ nào khớp."}</div>`
+        + hits.slice(0, MAX).map(e => `<a class="hit" href="${esc(e.href)}">
+            <div class="hit-w">${esc(e.where)}</div>
+            <div class="hit-t">${esc(e.title)}</div>
+            <div class="hit-s">${snippet(e, words)}</div>
+          </a>`).join("");
+    }
+    input.addEventListener("focus", ready, { once: true });
+    input.addEventListener("input", () => { clearTimeout(timer); timer = setTimeout(run, 150); });
+    return wrap;
+  }
 
   /* ---------- Trang chủ: danh sách mọi cuốn sách ---------- */
   function homePage() {
@@ -198,6 +404,8 @@
     bar($("bar"), [{ t: SITE, href: "../../" }, { t: b.title }]);
 
     const fs = formatsOf(b);
+    const pos = lastPos(b);
+    const searchable = fs.some(f => f.key !== "audio" && (b.parts || []).some(p => p[f.key]));
     $("app").innerHTML = `
       <section class="intro">
         <div class="label">${esc(b.author)}${b.translator ? ` · ${esc(b.translator)} dịch` : ""}</div>
@@ -205,6 +413,7 @@
         ${b.original ? `<div class="meta">Tên gốc: ${esc(b.original)}</div>` : ""}
         ${b.blurb ? `<p>${esc(b.blurb)}</p>` : ""}
       </section>
+      ${pos ? `<a class="resume" href="${pos.f.dir}#phan-${pos.p.n}"><span>Đọc tiếp</span><b>${pos.f.label} · ${esc(pos.p.title)}${pos.p.years ? ` · ${esc(pos.p.years)}` : ""} →</b></a>` : ""}
       ${fs.length ? `
       <h2 class="sec-title">Xem</h2>
       <ul class="formats">
@@ -226,7 +435,16 @@
               || `<span class="soon">Sắp có</span>`}</span>
           </li>`).join("")}
       </ol>` : ""}`;
+
+    if (searchable) {
+      const title = document.createElement("h2");
+      title.className = "sec-title";
+      title.textContent = "Tìm trong sách";
+      const at = $("app").querySelector(".formats");
+      const box = searchBox(b);
+      if (at) at.after(title, box); else $("app").querySelector(".intro").after(title, box);
+    }
   }
 
-  window.Site = { SITE, FORMATS, bar, slug, currentBook, homePage, bookPage };
+  window.Site = { SITE, FORMATS, bar, slug, currentBook, homePage, bookPage, esc, partOf, chLabel, loadScript, lazyParts, partNav };
 })();

@@ -211,6 +211,8 @@ async function render() {
     const page = await dump(origin + base);
     if (!page || page.includes("Không tìm thấy sách")) err(base, "trang sách không hiện được cuốn này");
     else ok++;
+    const searchable = FORMATS.some(f => f.key !== "audio" && b[f.key] && (b.parts || []).some(p => p[f.key]));
+    if (page && searchable && !page.includes('id="find"')) err(base, "trang sách không hiện ô Tìm trong sách");
     for (const f of FORMATS.filter(f => b[f.key])) {
       const parts = (b.parts || []).filter(p => p[f.key]);
       const last = parts.length ? parts[parts.length - 1].n : null;

@@ -48,18 +48,15 @@ Chép `books/<slug>/timeline/index.html` (hoặc của Hai Số Phận) sang `bo
 
 **Chung:** theo mục Văn phong trong SKILL.md. Mỗi chương của phần phải nằm trong `ch` của một mục (`tools/check.mjs` cảnh báo chương bị sót). `intro` của phần không tiết lộ phần sau.
 
-## Lần đầu: viết `assets/js/summary.js`
+## Trang và giao diện: đã có, xem `assets/js/summary.js`
 
-Chỉ làm khi file này chưa có. Mục tiêu: trang tóm tắt trông và hoạt động như cùng một trang web với dòng thời gian. Đọc `assets/js/timeline.js` trước và dùng lại cách làm của nó:
+Không cần viết lại code khi thêm sách. Những điều nên biết khi viết nội dung:
 
-- `window.Summary = { page }`. `page()` dùng `Site.currentBook("../../../")`, đặt `document.title = "<Tên sách> · Tóm tắt"`, thanh đường dẫn `Sổ tay đọc sách / <Tên sách> / Tóm tắt`.
-- Phần mở đầu dùng lại class `.hero` (credit, tên sách, dòng "Tóm tắt", `lede`).
-- Thanh chọn phần dùng lại markup `.pnav` (bỏ nút Mở tất cả / Thu gọn vì nội dung đã mở sẵn). Phần chưa có tóm tắt có class `soon`.
-- Mỗi phần có tóm tắt là một `<section class="psec pending" id="phan-N" data-n="N">`, chỉ nạp `data/phan-N.js` bằng thẻ `<script>` khi sắp cuộn tới (IntersectionObserver). Nạp xong class chỉ còn đúng `psec`. Lỗi thì hiện chữ "Không tải được phần này. Hãy thử tải lại trang." Mở trang với `#phan-N` thì nạp các phần từ 1 đến N rồi mới cuộn. `tools/check.mjs` dựa vào đúng những điều này để kiểm tra.
-- Đầu mỗi phần dùng lại `.phead` (nhãn "Phần N · năm", tên phần, "Chương x–y", `intro`).
-- Mỗi chương là một `<article class="sum-ch">`: nhãn "Chương 3" (hoặc "Chương 7–8"), `<h3>` tên chương, `tease` màu nhạt, `body`, và nếu có `points` thì một danh sách có tiêu đề "Ý chính".
-- CSS: thêm một mục "Tóm tắt" trong `assets/css/style.css`, chỉ dùng biến màu và font có sẵn (`--fg`, `--muted`, `--accent`, `--line`, `--display`, `--body`, `--ui`) để tự đúng cả giao diện sáng lẫn tối. Cột chữ khoảng 65 đến 70 ký tự cho dễ đọc.
-- Xong thì: chụp thử trang ở giao diện sáng, tối và khổ điện thoại (rộng 390px); sửa bảng "Các dạng nội dung" trong README; sửa mục này trong skill thành "đã có, xem assets/js/summary.js" kèm những gì thực tế khác với mô tả ở đây.
+- Mỗi mục trong `chapters` thành một `<article class="sum-ch" data-ch="…">` với nhãn "Chương 7" (hoặc "Chương 7–8" khi gộp chương liền nhau), `<h3>` tên chương, `tease` màu nhạt, `body`, và khung "Ý chính" nếu có `points`.
+- Link `summary/#chuong-N` mở thẳng chương N. Trang dòng thời gian tự thêm link "Đọc tóm tắt chương …" vào thẻ sự kiện khi phần chứa chương đó có `summary: true`. Vì vậy `ch` phải đúng số chương theo ebook.
+- `intro` của phần hiện ở đầu phần, giữa trang. Nếu phần đó có dòng thời gian, đầu phần có nút "Xem dòng thời gian phần này".
+- Ô "Tìm trong sách" ở trang sách tìm cả `title`, `tease`, `body`, `points`, nên tên riêng viết đúng bản dịch thì người đọc tìm ra.
+- Cột chữ khoảng 68 ký tự, CSS ở mục "Tóm tắt" trong `assets/css/style.css`, chỉ dùng biến màu có sẵn nên tự đúng cả sáng lẫn tối. Phần chưa có tóm tắt hiện "Tóm tắt của phần này đang được viết."
 
 ## Quy trình một phần
 
