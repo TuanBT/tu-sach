@@ -23,10 +23,10 @@ const err = (where, msg) => errors.push(`${where}: ${msg}`);
 const warn = (where, msg) => warns.push(`${where}: ${msg}`);
 
 /* Danh sách dạng nội dung lấy thẳng từ FORMATS trong assets/js/site.js để luôn khớp. */
-const FORMATS = [...read("assets/js/site.js").matchAll(/\{ key: "(\w+)",\s*label: "([^"]+)",\s*dir: "([^"]+)"/g)]
-  .map(m => ({ key: m[1], label: m[2], dir: m[3] }));
-/* Biến toàn cục mà file dữ liệu của mỗi dạng gán vào. */
-const GLOBAL = { timeline: "TL", summary: "SUM", audio: "AUDIO" };
+const FORMATS = [...read("assets/js/site.js").matchAll(/\{ key: "(\w+)",\s*label: "([^"]+)",\s*dir: "([^"]+)"(?:,\s*file: "([^"]+)")?/g)]
+  .map(m => ({ key: m[1], label: m[2], dir: m[3], file: m[4] }));
+/* Biến toàn cục mà file dữ liệu của mỗi dạng gán vào. Dạng có file (characters, map) là dạng của cả cuốn. */
+const GLOBAL = { timeline: "TL", summary: "SUM", audio: "AUDIO", characters: "CHARS", map: "MAP" };
 
 function run(file) {
   const ctx = { window: {} };
@@ -120,6 +120,47 @@ function checkAudio(where, A, book) {
     if (t.part && !(book.parts || []).some(p => p.n === t.part && p.audio)) warn(where, `tập ${t.n} thuộc phần ${t.part} nhưng phần đó chưa có audio: true`);
   }
 }
+const lastCh = book => Math.max(0, ...(book.parts || []).map(p => (p.ch ? p.ch[1] : 0)));
+function chIn(where, label, ch, book) {
+  const last = lastCh(book);
+  for (const c of [ch].flat()) if (!Number.isInteger(c) || c < 1 || (last && c > last)) err(where, `“${label}”: chương ${c} không hợp lệ (sách có ${last} chương)`);
+}
+function checkCharacters(where, C, book) {
+  if (!Array.isArray(C.groups) || !C.groups.length) return err(where, "groups rỗng");
+  if (!Array.isArray(C.people) || !C.people.length) return err(where, "people rỗng");
+  const ids = new Set(), groups = new Set(C.groups.map(g => g.id));
+  for (const p of C.people) {
+    const label = p.name || p.id || "?";
+    if (!p.id || ids.has(p.id)) err(where, `“${label}”: id trống hoặc bị trùng`);
+    ids.add(p.id);
+    if (!groups.has(p.group)) err(where, `“${label}”: group "${p.group}" không có trong groups`);
+    for (const f of ["name", "role"]) if (!p[f]) err(where, `“${label}” thiếu ${f}`);
+    chIn(where, label, p.ch, book);
+    for (const n of p.names || []) { chIn(where, label, n.ch, book); if (!n.name) err(where, `“${label}”: names thiếu name`); }
+    for (const n of p.notes || []) {
+      chIn(where, label, n.ch, book);
+      if (!n.text) err(where, `“${label}”: một ghi chú thiếu text`);
+      if (Math.min(...[n.ch].flat()) < p.ch) warn(where, `“${label}”: ghi chú chương ${n.ch} sớm hơn chương xuất hiện ${p.ch}`);
+    }
+  }
+}
+function checkMap(where, M, book) {
+  if (!Array.isArray(M.routes) || !M.routes.length) return err(where, "routes rỗng");
+  const ids = new Set();
+  for (const r of M.routes) {
+    if (!r.id || !r.who) err(where, "một tuyến thiếu id hoặc who");
+    if (!Array.isArray(r.stops) || !r.stops.length) { err(where, `tuyến ${r.id} không có chặng nào`); continue; }
+    for (const st of r.stops) {
+      const label = st.place || st.id || "?";
+      if (!st.id || ids.has(st.id)) err(where, `“${label}”: id trống hoặc bị trùng`);
+      ids.add(st.id);
+      for (const f of ["when", "place", "text"]) if (!st[f]) err(where, `“${label}” thiếu ${f}`);
+      if (!(Math.abs(st.lat) <= 90 && Math.abs(st.lon) <= 180)) err(where, `“${label}”: lat/lon không hợp lệ`);
+      if (!st.ch || !st.ch.length) err(where, `“${label}” thiếu số chương (ch)`); else chIn(where, label, st.ch, book);
+      for (const v of st.via || []) if (!(Math.abs(v[0]) <= 90 && Math.abs(v[1]) <= 180 && v[2])) err(where, `“${label}”: via phải là [lat, lon, "Tên"]`);
+    }
+  }
+}
 function checkText(where, src) {
   if (src.includes("—")) warn(where, "có dấu gạch ngang dài (—); quy ước dùng dấu chấm, phẩy, hai chấm");
   if (/<script/i.test(src.replace(/^[^]*?\*\//, ""))) err(where, "nội dung có thẻ <script>");
@@ -145,6 +186,20 @@ for (const book of BOOKS) {
       continue;
     }
     checkHead(base + f.dir, `${base}og.png`);
+    if (f.file) {
+      const file = `${base}${f.dir}data/${f.file}`;
+      if (!has(file)) { err(file, "thiếu file"); continue; }
+      try {
+        const src = read(file);
+        checkText(file, src);
+        const D = run(file)[GLOBAL[f.key]];
+        if (!D) { err(file, `không gán window.${GLOBAL[f.key]}`); continue; }
+        if (f.key === "characters") checkCharacters(file, D, book);
+        if (f.key === "map") checkMap(file, D, book);
+        ok++;
+      } catch (e) { err(file, "lỗi cú pháp: " + e.message); }
+      continue;
+    }
     if (f.key === "audio") {
       const file = `${base}audio/data/tracks.js`;
       if (!has(file)) { err(file, "thiếu file"); continue; }
@@ -211,7 +266,7 @@ async function render() {
     const page = await dump(origin + base);
     if (!page || page.includes("Không tìm thấy sách")) err(base, "trang sách không hiện được cuốn này");
     else ok++;
-    const searchable = FORMATS.some(f => f.key !== "audio" && b[f.key] && (b.parts || []).some(p => p[f.key]));
+    const searchable = FORMATS.some(f => b[f.key] && (f.file || (f.key !== "audio" && (b.parts || []).some(p => p[f.key]))));
     if (page && searchable && !page.includes('id="find"')) err(base, "trang sách không hiện ô Tìm trong sách");
     for (const f of FORMATS.filter(f => b[f.key])) {
       const parts = (b.parts || []).filter(p => p[f.key]);
@@ -221,6 +276,8 @@ async function render() {
       if (!dom) { err(where, "Chrome không mở được trang"); continue; }
       if (dom.includes("Không tìm thấy sách")) err(where, "trang không tìm thấy cuốn sách");
       if (dom.includes("Không tải được")) err(where, "có phần không tải được dữ liệu");
+      if (f.key === "characters" && !dom.includes('class="person ')) err(where, "trang nhân vật không hiện ai");
+      if (f.key === "map" && (!dom.includes('class="stop ') || !dom.includes('class="land"'))) err(where, "trang bản đồ không hiện bản đồ hoặc các chặng");
       const loaded = (dom.match(/class="psec"/g) || []).length;
       if (parts.length && loaded < parts.length) err(where, `mới hiện ${loaded}/${parts.length} phần`);
       else ok++;

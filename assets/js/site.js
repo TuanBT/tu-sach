@@ -38,8 +38,11 @@
   const FORMATS = [
     { key: "timeline", label: "Dòng thời gian", dir: "timeline/", desc: "Các nhân vật làm gì vào cùng một thời điểm, chia theo từng phần." },
     { key: "summary",  label: "Tóm tắt",        dir: "summary/",  desc: "Tóm tắt nội dung theo từng phần, từng chương." },
+    { key: "characters", label: "Nhân vật",     dir: "characters/", file: "nhan-vat.js",   desc: "Ai là ai, xuất hiện từ chương nào, về sau ra sao." },
+    { key: "map",      label: "Bản đồ hành trình", dir: "map/",     file: "hanh-trinh.js", desc: "Những nơi các nhân vật đã đi qua, theo đúng thứ tự trong sách." },
     { key: "audio",    label: "Audio",          dir: "audio/",    desc: "Nghe kể chuyện theo từng tập." }
   ];
+  /* Dạng có file (characters, map) là dạng của cả cuốn: một file data/<file> thay vì data/phan-N.js theo từng phần. */
   const formatsOf = b => FORMATS.filter(f => b[f.key]);
 
   /* ---------- Giao diện sáng/tối ---------- */
@@ -115,7 +118,7 @@
   const $ = id => document.getElementById(id);
 
   /* crumbs: [{ t: "Tên", href: "đường dẫn" }]; mục cuối là trang hiện tại, không có href. */
-  function bar(el, crumbs) {
+  function bar(el, crumbs, book) {
     const parts = crumbs.map((c, i) => {
       const last = i === crumbs.length - 1;
       const node = c.href && !last ? `<a href="${esc(c.href)}">${esc(c.t)}</a>`
@@ -130,8 +133,104 @@
     tip.innerHTML = `Trên iPhone, iPad: bấm nút Chia sẻ ${SHARE} của Safari rồi chọn <b>Thêm vào MH chính</b>.`;
     el.after(tip);
 
-    el.querySelector(".tools").append(installButton(tip), themeButton());
+    const tools = el.querySelector(".tools");
+    if (book && lastChapter(book)) {
+      const panel = document.createElement("div");
+      panel.className = "spoil-panel";
+      panel.hidden = true;
+      panel.append(spoilPicker(book));
+      tip.after(panel);
+      const btn = document.createElement("button");
+      btn.className = "btn";
+      btn.type = "button";
+      btn.id = "doc-toi";
+      btn.addEventListener("click", () => { panel.hidden = !panel.hidden; });
+      tools.append(btn);
+      syncSpoilButton(book);
+    }
+    tools.append(installButton(tip), themeButton());
     syncInstall();
+  }
+
+  /* ---------- Không lộ nội dung ----------
+     Người đọc chọn "đã đọc tới hết chương X" (lưu trong trình duyệt, riêng từng cuốn). Mọi trang của cuốn sách
+     che những gì xảy ra sau chương X:
+     - phần tử có data-maxch > X: làm mờ (class spoil), bấm vào thì mở riêng phần tử đó;
+     - phần tử có data-until > X: ẩn hẳn (class spoil-hide), dùng cho câu giới thiệu có thể lộ đoạn kết của một phần;
+     - .psec có data-from > X: khóa cả phần (class locked), kèm nút "Vẫn xem phần này".
+     X = 0 là không che gì: khi đó không thêm class nào (tools/check.mjs dựa vào class="psec").
+     Trang vẽ nội dung theo X (nhân vật, bản đồ) nghe sự kiện "sotay:doc-toi" để vẽ lại. */
+  const TOI = "sotay-doc-toi:";
+  function readTo(book) {
+    try { const v = parseInt(localStorage.getItem(TOI + book.slug), 10); return v > 0 ? v : 0; } catch (e) { return 0; }
+  }
+  const lastChapter = book => Math.max(0, ...(book.parts || []).map(p => (p.ch ? p.ch[1] : 0)));
+  function setReadTo(book, x) {
+    try { if (x) localStorage.setItem(TOI + book.slug, String(x)); else localStorage.removeItem(TOI + book.slug); } catch (e) {}
+    document.querySelectorAll("[data-open]").forEach(el => { delete el.dataset.open; });
+    document.querySelectorAll(".spoil-pick select").forEach(sel => { sel.value = String(x || 0); });
+    syncSpoilButton(book);
+    applySpoil(book);
+    dispatchEvent(new CustomEvent("sotay:doc-toi", { detail: x }));
+  }
+  function syncSpoilButton(book) {
+    const btn = document.getElementById("doc-toi");
+    if (!btn) return;
+    const x = readTo(book);
+    btn.textContent = x ? `Đọc tới ch. ${x}` : "Che phần chưa đọc";
+    btn.classList.toggle("on", !!x);
+  }
+  function applySpoil(book, root) {
+    const x = readTo(book), r = root || document;
+    r.querySelectorAll("[data-maxch]").forEach(el => el.classList.toggle("spoil", !!x && +el.dataset.maxch > x && !el.dataset.open));
+    r.querySelectorAll("[data-until]").forEach(el => el.classList.toggle("spoil-hide", !!x && +el.dataset.until > x));
+    r.querySelectorAll(".pnav-in a[data-from]").forEach(a => a.classList.toggle("locked", !!x && +a.dataset.from > x));
+    r.querySelectorAll(".psec[data-from]").forEach(sec => {
+      const on = !!x && +sec.dataset.from > x && !sec.dataset.open;
+      sec.classList.toggle("locked", on);
+      let note = sec.querySelector(":scope > .lock");
+      if (!on) { if (note) note.remove(); return; }
+      if (!note) { note = document.createElement("div"); note.className = "lock"; sec.prepend(note); }
+      const p = (book.parts || []).find(q => q.n === +sec.dataset.n) || {};
+      note.innerHTML = `<div class="label">Phần ${p.n}${p.years ? ` · ${esc(p.years)}` : ""}</div>
+        <p><b>${esc(p.title || "")}</b>${p.ch ? ` (chương ${p.ch[0]}–${p.ch[1]})` : ""} nằm sau chỗ bạn đang đọc, chương ${x}.</p>
+        <button class="btn" type="button" data-unlock>Vẫn xem phần này</button>`;
+    });
+  }
+  /* Bấm vào chỗ bị che: mở riêng chỗ đó. Bắt ở pha capture để thẻ <details> không bị mở/đóng theo. */
+  document.addEventListener("click", e => {
+    const s = e.target.closest && e.target.closest(".spoil");
+    if (s) {
+      e.preventDefault();
+      e.stopPropagation();
+      s.dataset.open = "1";
+      s.classList.remove("spoil");
+      return;
+    }
+    const u = e.target.closest && e.target.closest("[data-unlock]");
+    if (u) {
+      const sec = u.closest(".psec");
+      sec.dataset.open = "1";
+      sec.classList.remove("locked");
+      u.closest(".lock").remove();
+    }
+  }, true);
+
+  /* Ô chọn "Tôi đã đọc tới hết chương …", dùng ở thanh trên cùng và trang sách. */
+  function spoilPicker(book) {
+    const wrap = document.createElement("label");
+    wrap.className = "spoil-pick";
+    const groups = (book.parts || []).filter(p => p.ch).map(p => {
+      let opts = "";
+      for (let c = p.ch[0]; c <= p.ch[1]; c++) opts += `<option value="${c}">chương ${c}</option>`;
+      return `<optgroup label="${esc(p.title)}${p.years ? ` · ${esc(p.years)}` : ""}">${opts}</optgroup>`;
+    }).join("");
+    wrap.innerHTML = `<span>Tôi đã đọc tới hết</span>
+      <select><option value="0">cả cuốn (không che gì)</option>${groups}</select>`;
+    const sel = wrap.querySelector("select");
+    sel.value = String(readTo(book));
+    sel.addEventListener("change", () => setReadTo(book, +sel.value));
+    return wrap;
   }
 
   /* ---------- Tìm cuốn sách của trang hiện tại ---------- */
@@ -211,6 +310,7 @@
         if (P) {
           opts.render(sec, meta, P);
           sec.classList.remove("pending");
+          applySpoil(book, sec);
         } else {
           const l = sec.querySelector(".loading");
           if (l) l.textContent = "Không tải được phần này. Hãy thử tải lại trang.";
@@ -245,6 +345,14 @@
       if (has(book.parts.find(p => p.n === n))) remember(book.slug, opts.key, n);
     }), { rootMargin: "-40% 0px -55% 0px" });
     el.querySelectorAll(".psec").forEach(s => spy.observe(s));
+
+    /* Đánh dấu chương mở đầu của mỗi phần để chế độ "không lộ nội dung" khóa được cả phần. */
+    for (const p of book.parts) if (p.ch) {
+      const sec = el.querySelector(`#phan-${p.n}`), a = el.querySelector(`.pnav-in a[data-n="${p.n}"]`);
+      if (sec) sec.dataset.from = p.ch[0];
+      if (a) a.dataset.from = p.ch[0];
+    }
+    applySpoil(book, el);
 
     /* Lần nhảy đầu (mở trang bằng link có #) đợi font tải xong rồi nhảy thẳng, không cuộn mượt:
        font về sau làm đổi chiều cao chữ, cuộn mượt dở dang sẽ dừng sai chỗ. */
@@ -286,19 +394,30 @@
 
   function buildIndex(book) {
     const out = [];
-    const add = (where, href, title, html) => {
+    const add = (where, href, title, html, ch) => {
       const text = plain([html].flat().join(" "));
-      out.push({ where, href, title: plain(title), text, f: fold(text), ft: fold(plain(title)) });
+      out.push({ where, href, title: plain(title), text, f: fold(text), ft: fold(plain(title)), ch: ch || 0 });
     };
+    const top = ch => (ch && ch.length ? Math.max(...ch) : 0);
     for (const p of book.parts || []) {
       const T = book.timeline && p.timeline && (window.TL || {})[p.n];
       const S = book.summary && p.summary && (window.SUM || {})[p.n];
       if (S) for (const c of S.chapters || []) {
-        add(`Tóm tắt · ${p.title} · Chương ${chLabel(c.ch)}`, `summary/#chuong-${c.ch[0]}`, c.title, [c.tease, c.body, (c.points || []).join(" ")]);
+        add(`Tóm tắt · ${p.title} · Chương ${chLabel(c.ch)}`, `summary/#chuong-${c.ch[0]}`, c.title, [c.tease, c.body, (c.points || []).join(" ")], top(c.ch));
       }
       if (T) for (const r of T.rows || []) for (const k of ["a", "b", "both"]) for (const e of r[k] || []) {
-        add(`Dòng thời gian · ${p.title} · ${plain(e.when)}`, `timeline/#phan-${p.n}`, e.title, [e.tease, e.body]);
+        add(`Dòng thời gian · ${p.title} · ${plain(e.when)}`, `timeline/#phan-${p.n}`, e.title, [e.tease, e.body], top(e.ch));
       }
+    }
+    const C = book.characters && window.CHARS;
+    if (C) for (const c of C.people || []) {
+      add(`Nhân vật · xuất hiện từ chương ${c.ch}`, `characters/#nv-${c.id}`, c.name, [c.role], c.ch);
+      for (const n of c.names || []) add(`Nhân vật · chương ${n.ch}`, `characters/#nv-${c.id}`, `${c.name}: ${n.name}`, [n.name], n.ch);
+      for (const n of c.notes || []) add(`Nhân vật · chương ${chLabel(n.ch)}`, `characters/#nv-${c.id}`, c.name, [n.text], top(n.ch));
+    }
+    const M = book.map && window.MAP;
+    if (M) for (const r of M.routes || []) for (const st of r.stops || []) {
+      add(`Bản đồ · ${r.who} · ${plain(st.when)}`, `map/#${st.id}`, st.place, [st.text], top(st.ch));
     }
     return out;
   }
@@ -341,8 +460,10 @@
       if (index) return Promise.resolve(index);
       if (!loading) {
         const files = [];
-        for (const f of formatsOf(book)) if (f.key !== "audio")
-          for (const p of book.parts || []) if (p[f.key]) files.push(`${f.dir}data/phan-${p.n}.js`);
+        for (const f of formatsOf(book)) {
+          if (f.file) files.push(`${f.dir}data/${f.file}`);
+          else if (f.key !== "audio") for (const p of book.parts || []) if (p[f.key]) files.push(`${f.dir}data/phan-${p.n}.js`);
+        }
         loading = Promise.all(files.map(loadScript)).then(() => (index = buildIndex(book)));
       }
       return loading;
@@ -354,9 +475,12 @@
       const words = q.split(/\s+/).filter(Boolean);
       const all = await ready();
       if (fold(input.value.trim()) !== q) return;
-      const hits = all.filter(e => words.every(w => e.f.includes(w) || e.ft.includes(w)));
+      const x = readTo(book);
+      const found = all.filter(e => words.every(w => e.f.includes(w) || e.ft.includes(w)));
+      const hits = x ? found.filter(e => e.ch <= x) : found;
+      const hidden = found.length - hits.length;
       const MAX = 40;
-      out.innerHTML = `<div class="find-n">${hits.length ? `${hits.length} chỗ khớp${hits.length > MAX ? `, hiện ${MAX} chỗ đầu` : ""}` : "Không thấy chỗ nào khớp."}</div>`
+      out.innerHTML = `<div class="find-n">${hits.length ? `${hits.length} chỗ khớp${hits.length > MAX ? `, hiện ${MAX} chỗ đầu` : ""}` : "Không thấy chỗ nào khớp."}${hidden ? ` Che ${hidden} chỗ nằm sau chương ${x}.` : ""}</div>`
         + hits.slice(0, MAX).map(e => `<a class="hit" href="${esc(e.href)}">
             <div class="hit-w">${esc(e.where)}</div>
             <div class="hit-t">${esc(e.title)}</div>
@@ -377,7 +501,7 @@
       <section class="intro">
         <div class="label">Tủ sách</div>
         <h1>${SITE}</h1>
-        <p>Dòng thời gian, tóm tắt và audio cho những cuốn sách đã đọc.</p>
+        <p>Dòng thời gian, tóm tắt, nhân vật và bản đồ hành trình cho những cuốn sách đã đọc.</p>
       </section>
       <ul class="shelf">
         ${books.map(b => {
@@ -401,11 +525,11 @@
     const b = currentBook("../../");
     if (!b) return;
     document.title = `${b.title} · ${SITE}`;
-    bar($("bar"), [{ t: SITE, href: "../../" }, { t: b.title }]);
+    bar($("bar"), [{ t: SITE, href: "../../" }, { t: b.title }], b);
 
     const fs = formatsOf(b);
     const pos = lastPos(b);
-    const searchable = fs.some(f => f.key !== "audio" && (b.parts || []).some(p => p[f.key]));
+    const searchable = fs.some(f => f.file || (f.key !== "audio" && (b.parts || []).some(p => p[f.key])));
     $("app").innerHTML = `
       <section class="intro">
         <div class="label">${esc(b.author)}${b.translator ? ` · ${esc(b.translator)} dịch` : ""}</div>
@@ -436,6 +560,15 @@
           </li>`).join("")}
       </ol>` : ""}`;
 
+    if (lastChapter(b)) {
+      const box = document.createElement("section");
+      box.className = "spoil-box";
+      box.innerHTML = `<h2 class="sec-title">Không lộ nội dung</h2>
+        <p>Đang đọc dở? Chọn chương bạn đã đọc xong. Mọi trang của cuốn sách sẽ che những gì xảy ra sau đó. Bấm vào chỗ bị che để xem riêng chỗ ấy.</p>`;
+      box.append(spoilPicker(b));
+      ($("app").querySelector(".resume") || $("app").querySelector(".intro")).after(box);
+    }
+
     if (searchable) {
       const title = document.createElement("h2");
       title.className = "sec-title";
@@ -446,5 +579,5 @@
     }
   }
 
-  window.Site = { SITE, FORMATS, bar, slug, currentBook, homePage, bookPage, esc, partOf, chLabel, loadScript, lazyParts, partNav };
+  window.Site = { SITE, FORMATS, bar, slug, currentBook, homePage, bookPage, esc, partOf, chLabel, loadScript, lazyParts, partNav, readTo, applySpoil };
 })();

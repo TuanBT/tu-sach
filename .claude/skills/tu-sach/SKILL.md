@@ -22,11 +22,15 @@ data/books.js                 Danh mục sách: thông tin sách, các phần, d
 assets/js/site.js             Trang chủ, trang sách, FORMATS (danh sách dạng nội dung), Google Analytics
 assets/js/timeline.js         Vẽ trang dòng thời gian
 assets/js/summary.js          Vẽ trang tóm tắt (nạp từng phần dùng chung Site.lazyParts với dòng thời gian)
+assets/js/characters.js       Vẽ trang nhân vật
+assets/js/map.js              Vẽ trang bản đồ hành trình (nền bản đồ ở assets/js/map-land.js, sinh tự động)
 assets/css/style.css          Giao diện chung (sáng/tối)
 books/<slug>/index.html       Trang giới thiệu sách
 books/<slug>/og.png           Ảnh xem trước khi chia sẻ link
 books/<slug>/timeline/        index.html + data/phan-N.js
 books/<slug>/summary/         index.html + data/phan-N.js
+books/<slug>/characters/      index.html + data/nhan-vat.js (cả cuốn một file)
+books/<slug>/map/             index.html + data/hanh-trinh.js (cả cuốn một file)
 books/<slug>/audio/           index.html + data/tracks.js (chỉ chứa link)
 tools/check.mjs               Kiểm tra toàn bộ (dữ liệu + mở thử trang bằng Chrome)
 tools/make-images.sh          Tạo ảnh chia sẻ og.png và icon
@@ -39,6 +43,8 @@ tools/make-images.sh          Tạo ảnh chia sẻ og.png và icon
 | Đưa một cuốn sách mới lên | Mục **Thêm sách mới** dưới đây, rồi file của dạng nội dung đầu tiên |
 | Viết hoặc sửa dòng thời gian một phần | `references/timeline.md` |
 | Tóm tắt một phần hoặc cả cuốn | `references/summary.md` |
+| Viết hoặc sửa trang nhân vật | `references/characters.md` |
+| Viết hoặc sửa bản đồ hành trình | `references/map.md` |
 | Thêm audio | `references/audio.md` |
 | Đọc nội dung file ebook | `references/ebook.md` |
 
@@ -72,6 +78,14 @@ tools/make-images.sh          Tạo ảnh chia sẻ og.png và icon
    Xem lại ảnh (Read file png) xem chữ có bị tràn hay xuống dòng xấu không.
 6. **Dạng nội dung đầu tiên:** làm theo file reference tương ứng.
 7. **README:** thêm một dòng vào bảng "Sách hiện có".
+
+## Không lộ nội dung: vì sao số chương phải đúng
+
+Người đang đọc dở chọn "đã đọc tới hết chương X", và mọi trang che những gì sau chương X dựa hoàn toàn vào số chương ghi trong dữ liệu (`ch` của sự kiện, chương tóm tắt, mốc nhân vật, chặng bản đồ). Vì vậy:
+
+- Mỗi mục nội dung ghi đủ mọi chương mà nó kể tới. Một sự kiện tóm cả chương 12 lẫn 14 thì ghi `ch: [12, 14]`, nó sẽ bị che cho tới khi người đọc qua chương 14.
+- Phần mô tả không gắn chương (`role` của nhân vật, `intro` của phần, `sub` của cột dòng thời gian) không được lộ điều xảy ra sau. Riêng `intro` của phần và `sub` tự ẩn khi người đọc chưa đọc hết phần đó, nên chúng được phép nói tới đoạn kết của chính phần ấy.
+- Code tự lo phần hiển thị (`Site.applySpoil` trong `assets/js/site.js`). Không cần viết gì thêm trong dữ liệu.
 
 ## Văn phong
 

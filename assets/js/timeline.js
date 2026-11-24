@@ -22,7 +22,8 @@
   function card(ev, who) {
     const id = ++uid;
     events.set(id, ev);
-    return `<details class="ev" data-id="${id}">
+    const top = ev.ch && ev.ch.length ? Math.max(...ev.ch) : 0;
+    return `<details class="ev" data-id="${id}"${top ? ` data-maxch="${top}"` : ""}>
       <summary>
         <span class="when"><span class="tag">${ev.tag || who}</span><span class="chip">${ev.when}</span>${ev.place ? `<span>${ev.place}</span>` : ""}</span>
         <span class="ttl">${ev.title}</span>
@@ -58,13 +59,20 @@
     return empty ? `<div class="empty">${empty}</div>` : "";
   }
 
-  function heads(P) {
+  function heads(P, meta) {
     const A = P.people.a, B = P.people.b;
+    const until = meta && meta.ch ? ` data-until="${meta.ch[1]}"` : "";
     return `<div class="heads">
-      <div class="who a"><div class="mono">${A.initial}</div><div><h3>${A.name}</h3>${A.sub ? `<div class="sub">${A.sub}</div>` : ""}</div></div>
+      <div class="who a"><div class="mono">${A.initial}</div><div><h3>${A.name}</h3>${A.sub ? `<div class="sub"${until}>${A.sub}</div>` : ""}</div></div>
       <div class="axis-head">${P.axisLabel || "Năm"}</div>
-      <div class="who b"><div class="mono">${B.initial}</div><div><h3>${B.name}</h3>${B.sub ? `<div class="sub">${B.sub}</div>` : ""}</div></div>
+      <div class="who b"><div class="mono">${B.initial}</div><div><h3>${B.name}</h3>${B.sub ? `<div class="sub"${until}>${B.sub}</div>` : ""}</div></div>
     </div>`;
+  }
+
+  /* Câu "Song hành" nói về cả hàng, nên che khi bất kỳ sự kiện nào trong hàng nằm sau chỗ đang đọc. */
+  function noteCh(r) {
+    const all = ["a", "b", "both"].flatMap(k => r[k] || []).flatMap(e => e.ch || []);
+    return all.length ? ` data-maxch="${Math.max(...all)}"` : "";
   }
 
   function rows(P) {
@@ -76,15 +84,16 @@
         <div class="side b">${side(r.b, r.bEmpty, B.short)}</div>
         ${r.both && r.both.length ? `<div class="side both">${r.both.map(e => card(e, "Cả hai")).join("")}</div>` : ""}
       </section>
-      ${r.note ? `<div class="note"><div><span class="lbl">Song hành</span><p>${r.note}</p></div></div>` : ""}`).join("");
+      ${r.note ? `<div class="note"${noteCh(r)}><div><span class="lbl">Song hành</span><p>${r.note}</p></div></div>` : ""}`).join("");
   }
 
-  function partHead(meta, intro) {
+  /* real: intro thật của phần (có thể lộ đoạn kết của phần), ẩn khi chưa đọc hết phần. */
+  function partHead(meta, intro, real) {
     return `<header class="phead">
       <div class="label">Phần ${meta.n} · ${meta.years}</div>
       <h2>${meta.title}</h2>
       ${meta.ch ? `<div class="pmeta">Chương ${meta.ch[0]}–${meta.ch[1]}</div>` : ""}
-      ${intro ? `<p>${intro}</p>` : ""}
+      ${intro ? `<p${real && meta.ch ? ` data-until="${meta.ch[1]}"` : ""}>${intro}</p>` : ""}
     </header>`;
   }
 
@@ -119,7 +128,7 @@
       key: "timeline",
       global: "TL",
       render(sec, meta, P) {
-        sec.innerHTML = partHead(meta, P.intro) + heads(P) + `<div class="timeline">${rows(P)}</div>`;
+        sec.innerHTML = partHead(meta, P.intro, true) + heads(P, meta) + `<div class="timeline">${rows(P)}</div>`;
       }
     });
 
@@ -149,7 +158,7 @@
       { t: Site.SITE, href: "../../../" },
       { t: book.title, href: "../" },
       { t: "Dòng thời gian" }
-    ]);
+    ], book);
     full(document.getElementById("app"), book);
   }
 

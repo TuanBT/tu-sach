@@ -1,6 +1,6 @@
 # Sổ tay đọc sách
 
-Tủ sách cá nhân: dòng thời gian, tóm tắt và audio cho những cuốn sách đã đọc.
+Tủ sách cá nhân: dòng thời gian, tóm tắt, nhân vật, bản đồ hành trình cho những cuốn sách đã đọc.
 
 Xem online: https://tusach.buitientuan.com
 
@@ -10,7 +10,7 @@ Trang web tĩnh chạy trên GitHub Pages, không cần cài đặt hay build. C
 
 | Sách | Tác giả | Đã có |
 |---|---|---|
-| Hai Số Phận (Kane and Abel) | Jeffrey Archer, Nguyễn Việt Hải dịch | Dòng thời gian đủ 8 phần, 1906–1967. Tóm tắt Phần Một (chương 1–21) |
+| Hai Số Phận (Kane and Abel) | Jeffrey Archer, Nguyễn Việt Hải dịch | Dòng thời gian đủ 8 phần, 1906–1967. Tóm tắt Phần Một (chương 1–21). Nhân vật (37 người). Bản đồ hành trình |
 
 ## Cấu trúc
 
@@ -27,6 +27,9 @@ assets/
   js/site.js                Thanh đường dẫn, nút sáng/tối, trang chủ, trang giới thiệu sách, Google Analytics
   js/timeline.js            Trang dòng thời gian
   js/summary.js             Trang tóm tắt
+  js/characters.js          Trang nhân vật
+  js/map.js                 Trang bản đồ hành trình
+  js/map-land.js            Nền bản đồ thế giới (sinh bằng tools/make-map-land.py, đừng sửa tay)
   icons/                    Icon trang web và ứng dụng (icon.svg là bản gốc)
   img/og.png                Ảnh xem trước khi chia sẻ link trang chủ
 books/
@@ -39,10 +42,13 @@ books/
     summary/                Tóm tắt theo phần, theo chương
       index.html
       data/phan-1.js …      Dữ liệu từng phần
+    characters/             Nhân vật: index.html + data/nhan-vat.js (cả cuốn một file)
+    map/                    Bản đồ hành trình: index.html + data/hanh-trinh.js (cả cuốn một file)
     audio/                  Audio (chưa có cuốn nào)
 tools/
   check.mjs                 Kiểm tra toàn bộ trước khi commit: node tools/check.mjs
   make-images.sh            Tạo lại icon và ảnh xem trước bằng Chrome headless
+  make-map-land.py          Tạo lại nền bản đồ assets/js/map-land.js từ dữ liệu Natural Earth
   og.html                   Mẫu ảnh xem trước 1200×630
   icon-maskable.svg         Icon không bo góc cho Android và iPhone
 ```
@@ -72,6 +78,8 @@ Mỗi phần trong `parts` đánh dấu dạng nào đã xong cho phần đó: `
 |---|---|---|---|
 | Dòng thời gian | `timeline/` | `timeline: {...}` | `assets/js/timeline.js` |
 | Tóm tắt | `summary/` | `summary: {...}` | `assets/js/summary.js` |
+| Nhân vật | `characters/` | `characters: {...}` | `assets/js/characters.js` |
+| Bản đồ hành trình | `map/` | `map: {...}` | `assets/js/map.js` |
 | Audio | `audio/` | `audio: {...}` | sẽ thêm `assets/js/audio.js` khi có cuốn đầu tiên |
 
 Danh sách các dạng nằm ở `FORMATS` đầu file `assets/js/site.js`. Thêm một dạng mới: thêm một dòng vào đó, viết file JS vẽ trang trong `assets/js/`, và một `index.html` trong thư mục con của sách.
@@ -126,6 +134,12 @@ Thêm cho một cuốn sách: chép `books/hai-so-phan/summary/index.html` sang 
 
 `ch` là danh sách số chương theo thứ tự trong ebook (`[7, 8]` khi gộp hai chương ngắn). Mỗi chương thành một mục có link riêng `#chuong-N`.
 
+### Nhân vật và Bản đồ hành trình
+
+Hai dạng này là của cả cuốn, không chia theo phần: mỗi dạng một file dữ liệu (`characters/data/nhan-vat.js`, `map/data/hanh-trinh.js`), không đặt cờ trong `parts`. Thêm cho một cuốn: chép `index.html` của Hai Số Phận sang thư mục tương ứng (sửa `<head>`), thêm object `characters: { lede, footer }` hoặc `map: { lede, footer }` vào cuốn sách. Định dạng và cách viết chi tiết nằm trong skill (`references/characters.md`, `references/map.md`).
+
+Nền bản đồ là đường bờ biển thế giới tỷ lệ 1:110m của Natural Earth (miền công cộng), đã chuyển sẵn thành `assets/js/map-land.js` (38 KB), nên trang không phụ thuộc dịch vụ bản đồ nào và vẫn xem được khi mất mạng. Chỉ cần tạo lại khi muốn đổi phép chiếu: tải `land-110m.json` của gói world-atlas về một thư mục tạm rồi chạy `python3 tools/make-map-land.py <file>`.
+
 ### Audio: lưu file ở đâu
 
 GitHub giới hạn mỗi file 100 MB và cả trang khoảng 1 GB, nên không đưa file mp3 vào repo. Một cuốn sách nói vài giờ đã vài trăm MB. Để file audio ở chỗ khác (Cloudflare R2, Google Drive, YouTube…) và trong repo chỉ lưu đường link.
@@ -154,6 +168,7 @@ Mã GA nằm trong `assets/js/site.js`, không dán vào từng file HTML. Mọi
 
 ## Trên trang một cuốn sách
 
+- **Không lộ nội dung**: người đang đọc dở chọn "Tôi đã đọc tới hết chương X" (ở trang sách, hoặc nút *Che phần chưa đọc* trên thanh trên cùng của mọi trang). Lựa chọn lưu trong trình duyệt, riêng cho từng cuốn. Mọi trang che những gì xảy ra sau chương X: sự kiện, chương tóm tắt, mốc của nhân vật bị làm mờ (bấm vào để mở riêng chỗ đó); phần chưa đọc tới bị khóa; nhân vật xuất hiện sau X và chặng đường sau X bị ẩn; kết quả tìm kiếm sau X bị lọc. Vì vậy mọi mục nội dung phải ghi đúng số chương `ch`.
 - **Đọc tiếp**: trang dòng thời gian và tóm tắt ghi nhớ (trong trình duyệt) phần đang xem; trang sách hiện một nút dẫn về đúng chỗ đó.
 - **Tìm trong sách**: ô tìm kiếm tìm trên mọi dòng thời gian và tóm tắt đã có của cuốn sách, gõ không dấu cũng được. Lần đầu gõ mới tải dữ liệu, tìm ngay trên máy, không cần server.
 - **Link tới từng chương**: `summary/#chuong-7` mở thẳng chương 7 (nạp các phần phía trên trước rồi mới cuộn). Thẻ sự kiện ở dòng thời gian có link "Đọc tóm tắt chương …" khi chương đó đã được tóm tắt.

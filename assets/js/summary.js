@@ -9,21 +9,22 @@
 (function () {
   const esc = s => Site.esc(s);
 
-  function partHead(book, meta, intro) {
+  /* real: intro thật của phần (có thể lộ đoạn kết của phần), ẩn khi chưa đọc hết phần. */
+  function partHead(book, meta, intro, real) {
     const tl = book.timeline && meta.timeline
       ? `<a class="btn" href="../timeline/#phan-${meta.n}">Xem dòng thời gian phần này</a>` : "";
     return `<header class="phead">
       <div class="label">Phần ${meta.n}${meta.years ? ` · ${esc(meta.years)}` : ""}</div>
       <h2>${esc(meta.title)}</h2>
       ${meta.ch ? `<div class="pmeta">Chương ${meta.ch[0]}–${meta.ch[1]}</div>` : ""}
-      ${intro ? `<p>${intro}</p>` : ""}
+      ${intro ? `<p${real && meta.ch ? ` data-until="${meta.ch[1]}"` : ""}>${intro}</p>` : ""}
       ${tl}
     </header>`;
   }
 
   function chapter(c) {
     const ch = c.ch || [];
-    return `<article class="sum-ch" data-ch="${ch.join(" ")}"${ch.length ? ` id="chuong-${ch[0]}"` : ""}>
+    return `<article class="sum-ch" data-ch="${ch.join(" ")}"${ch.length ? ` id="chuong-${ch[0]}" data-maxch="${Math.max(...ch)}"` : ""}>
       ${ch.length ? `<a class="label" href="#chuong-${ch[0]}">Chương ${Site.chLabel(ch)}</a>` : ""}
       <h3>${c.title}</h3>
       ${c.tease ? `<p class="sum-tease">${c.tease}</p>` : ""}
@@ -52,7 +53,7 @@
       key: "summary",
       global: "SUM",
       render(sec, meta, P) {
-        sec.innerHTML = partHead(book, meta, P.intro) + `<div class="sum-list">${(P.chapters || []).map(chapter).join("")}</div>`;
+        sec.innerHTML = partHead(book, meta, P.intro, true) + `<div class="sum-list">${(P.chapters || []).map(chapter).join("")}</div>`;
       }
     });
   }
@@ -66,7 +67,7 @@
       { t: Site.SITE, href: "../../../" },
       { t: book.title, href: "../" },
       { t: "Tóm tắt" }
-    ]);
+    ], book);
     full(document.getElementById("app"), book);
   }
 

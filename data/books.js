@@ -4,6 +4,8 @@
    Mỗi dạng nội dung là một object riêng, có object nào thì trang sách hiện dạng đó:
      timeline: {...}   dòng thời gian, ở books/<slug>/timeline/
      summary:  {...}   tóm tắt,         ở books/<slug>/summary/
+     characters: {...} nhân vật,      ở books/<slug>/characters/  (cả cuốn, data/nhan-vat.js)
+     map:      {...}   bản đồ hành trình, ở books/<slug>/map/     (cả cuốn, data/hanh-trinh.js)
      audio:    {...}   audio,           ở books/<slug>/audio/     (chưa dùng)
    parts: các phần của cuốn sách. Mỗi phần đánh dấu dạng nào đã xong cho phần đó:
      { n: 1, title: "Phần Một", years: "…", ch: [1, 21], timeline: true, summary: true }
@@ -26,6 +28,14 @@ window.BOOKS = [
     summary: {
       lede: "Sách kể xen kẽ hai cuộc đời. Ở đây mỗi chương được kể lại ngắn gọn, đúng trình tự sách kể, để nhớ lại ai đã làm gì, vì sao và dẫn tới đâu. Bấm vào nhãn chương để lấy link chia sẻ đúng chương đó.",
       footer: "Tóm tắt từ <i>Hai Số Phận</i> (Kane and Abel), Jeffrey Archer, Nguyễn Việt Hải dịch. Số chương theo thứ tự trong bản ebook."
+    },
+    characters: {
+      lede: "Ai là ai trong sáu mươi năm của hai gia đình. Mỗi người có một dòng tả lúc mới xuất hiện, kèm những mốc về sau ghi rõ số chương. Đang đọc dở thì chọn chương ở nút <b>Che phần chưa đọc</b> phía trên để không bị lộ.",
+      footer: "Từ <i>Hai Số Phận</i> (Kane and Abel), Jeffrey Archer, Nguyễn Việt Hải dịch. Số chương theo thứ tự trong bản ebook."
+    },
+    map: {
+      lede: "Những nơi Wladek và William đã đi qua, theo đúng thứ tự trong sách. Cuộn xuống hoặc bấm vào một chặng để bản đồ đưa tới chặng đó. Vòng màu vàng là nơi hai người chạm mặt.",
+      footer: "Từ <i>Hai Số Phận</i> (Kane and Abel), Jeffrey Archer, Nguyễn Việt Hải dịch. Nền bản đồ: Natural Earth. Số chương theo thứ tự trong bản ebook."
     },
     parts: [
       { n: 1, title: "Phần Một", years: "1906 – 1923", ch: [1, 21], timeline: true, summary: true },

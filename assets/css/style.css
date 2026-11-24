@@ -236,10 +236,112 @@ details[open] .chev{transform:rotate(180deg);background:var(--c);border-color:va
 .hit-s{color:var(--muted);font-size:15.5px;line-height:1.5;margin-top:3px}
 .hit mark{background:color-mix(in srgb,var(--accent) 24%,transparent);color:var(--fg);border-radius:3px;padding:0 1px}
 
+/* ---------- Không lộ nội dung ----------
+   .spoil: làm mờ một mục nằm sau chương người đọc chọn, bấm vào để mở. .spoil-hide: ẩn hẳn. .psec.locked: khóa cả phần. */
+#doc-toi.on{border-color:var(--accent);color:var(--accent)}
+.spoil-panel{margin:12px 0 0;padding:12px 14px;background:var(--surface);border:1px solid var(--line);border-radius:10px}
+.spoil-pick{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;font:500 14px/1.4 var(--ui)}
+.spoil-pick select{font:600 14px/1.2 var(--ui);color:var(--fg);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 10px;max-width:100%}
+.spoil-box{margin:0 0 30px}
+.spoil-box p{margin:6px 0 12px;color:var(--muted);font-size:15.5px;max-width:62ch}
+.spoil{position:relative;cursor:pointer}
+.spoil>*{filter:blur(6px);opacity:.5;pointer-events:none;user-select:none}
+.spoil::after{content:"Sau chương bạn đang đọc · bấm để xem";position:absolute;inset:0;display:grid;place-items:center;padding:8px;text-align:center;font:600 12.5px/1.3 var(--ui);color:var(--fg);z-index:1}
+.sum-ch.spoil .sum-body,.sum-ch.spoil .sum-pts{display:none}
+.spoil-hide{display:none!important}
+.psec.locked{min-height:0}
+.psec.locked>:not(.lock){display:none!important}
+.lock{margin:28px auto 8px;max-width:560px;padding:22px 24px;text-align:center;border:1px dashed var(--line);border-radius:12px;display:grid;gap:10px;justify-items:center}
+.lock p{margin:0;color:var(--muted)}
+.lock b{color:var(--fg)}
+.pnav-in a.locked{opacity:.4}
+
+/* ---------- Nhân vật ---------- */
+.nv-index{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:20px auto 6px;max-width:780px}
+.nv-index a{font:500 13px/1 var(--ui);text-decoration:none;color:var(--fg);background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:7px 11px}
+.nv-index a:hover{border-color:var(--muted)}
+.nv-hidden{text-align:center;color:var(--muted);font:500 13.5px/1.5 var(--ui);margin:12px 0 0}
+.nv-group{margin-top:36px}
+.nv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,330px),1fr));gap:14px;margin-top:10px}
+.person{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 18px;scroll-margin-top:16px;--c:var(--accent);--on-c:var(--on-accent)}
+.person.a{--c:var(--a);--on-c:var(--on-a)}
+.person.b{--c:var(--b);--on-c:var(--on-b)}
+.person:target{border-color:var(--c);box-shadow:0 0 0 1px var(--c)}
+.person header{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center}
+.person .mono{width:38px;height:38px;font-size:16px;background:var(--c);color:var(--on-c)}
+.person h3{margin:0;font:700 18px/1.25 var(--display)}
+.person .aka{font:500 12.5px/1.4 var(--ui);color:var(--muted);margin-top:2px}
+.person .since{align-self:start;font:600 11px/1.3 var(--ui);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);white-space:nowrap;text-decoration:none;padding-top:3px}
+.person a.since:hover{color:var(--fg);text-decoration:underline;text-underline-offset:3px}
+.person .role{margin:12px 0 0;font-size:16px;line-height:1.5}
+.pnotes{list-style:none;margin:12px 0 0;padding:10px 0 0;border-top:1px solid var(--line);display:grid;gap:8px}
+.pnotes li{display:grid;grid-template-columns:4.4em 1fr;gap:10px;font-size:15.5px;line-height:1.5}
+.pmore.spoil{max-height:4.2em;overflow:hidden;margin-top:12px;border-top:1px solid var(--line)}
+.pmore.spoil::after{content:"Còn " attr(data-n) " mốc sau chương bạn đang đọc · bấm để xem"}
+.pmore .pnotes{border-top:0;margin-top:0}
+.pnotes+.pmore .pnotes{padding-top:8px}
+.nch{font:600 11.5px/1.9 var(--ui);color:var(--c)}
+.pnotes b{font-weight:600}
+
+/* ---------- Bản đồ hành trình ----------
+   Bản đồ dính ở đầu trang. Đất liền là một <path> SVG; đường đi giữ nét mảnh khi phóng to (non-scaling-stroke);
+   điểm dừng và nhãn là phần tử HTML đặt chồng lên, nên chữ không to nhỏ theo mức phóng. */
+.map-page{max-width:1100px}
+.map-stick{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--bg);padding-top:10px;margin-top:18px}
+.map-box{position:relative;height:min(52vh,470px);border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--surface)}
+.map-svg{display:block;width:100%;height:100%}
+.land{fill:var(--surface-2);stroke:var(--line);stroke-width:1px;vector-effect:non-scaling-stroke}
+.leg{fill:none;stroke-width:2px;opacity:.5;stroke-linecap:round;stroke-linejoin:round}
+.leg.a{stroke:var(--a)}
+.leg.b{stroke:var(--b)}
+.leg.sea{stroke-dasharray:6 6}
+.leg.on{opacity:1;stroke-width:3.5px}
+.pins{position:absolute;inset:0;pointer-events:none}
+.pin,.via{position:absolute;left:0;top:0;width:0;height:0;padding:0;border:0;background:none}
+.pin{pointer-events:auto;cursor:pointer;--c:var(--a)}
+.pin.b{--c:var(--b)}
+.pin::before{content:"";position:absolute;left:-6px;top:-6px;width:12px;height:12px;border-radius:50%;background:var(--c);box-shadow:0 0 0 2px var(--surface)}
+.pin.meet::before{background:var(--accent);box-shadow:0 0 0 2px var(--surface),0 0 0 4px var(--c)}
+.pin.approx::before{background:var(--surface);border:2px dashed var(--c);box-sizing:border-box}
+.pin.on{z-index:2}
+.pin.on::before{left:-9px;top:-9px;width:18px;height:18px}
+.pin .lbl,.via .lbl{position:absolute;white-space:nowrap;pointer-events:none}
+.pin .lbl{left:13px;top:-12px;font:600 12.5px/1 var(--ui);color:var(--fg);background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:5px 7px;opacity:0;transition:opacity .15s;box-shadow:var(--shadow)}
+.pin.flip .lbl{left:auto;right:13px}
+.pin:hover .lbl,.pin:focus-visible .lbl,.pin.on .lbl{opacity:1}
+.pin.from .lbl{opacity:.75;font-weight:500}
+.via::before{content:"";position:absolute;left:-3px;top:-3px;width:6px;height:6px;border-radius:50%;background:var(--muted)}
+.via .lbl{left:8px;top:-7px;font:500 11px/1 var(--ui);color:var(--muted);opacity:0}
+.via.on .lbl{opacity:1}
+.map-tools{position:absolute;right:10px;top:10px}
+.map-box:not(.zoomed) .map-tools{display:none}
+.map-filter{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;padding:10px 0;border-bottom:1px solid var(--line)}
+.map-filter button{font:600 13px/1 var(--ui);padding:8px 12px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--fg);cursor:pointer}
+.map-filter button.a{color:var(--a)}
+.map-filter button.b{color:var(--b)}
+.map-filter button[aria-pressed="true"]{background:var(--ink);color:var(--on-ink);border-color:var(--ink)}
+.map-key{margin-left:auto;display:flex;align-items:center;gap:6px;font:500 12.5px/1.3 var(--ui);color:var(--muted)}
+.map-key i{display:inline-block;width:12px;height:12px;border-radius:50%;background:var(--accent)}
+.stops{list-style:none;margin:0 auto;padding:0 0 35vh;max-width:68ch}
+.stop{padding:22px 14px 18px;border-bottom:1px solid var(--line);border-left:3px solid transparent;cursor:pointer;--c:var(--a);--on-c:var(--on-a);transition:background .2s,border-color .2s}
+.stop.b{--c:var(--b);--on-c:var(--on-b)}
+.stop.on{background:var(--surface);border-left-color:var(--c)}
+.stop-h{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;font:500 12.5px/1.3 var(--ui);color:var(--muted)}
+.stop .who{font-weight:700;color:var(--c)}
+.stop.meet .who::after{content:" · chạm mặt";color:var(--accent)}
+.stop h3{margin:6px 0 4px;font:700 20px/1.3 var(--display)}
+.stop-t p{margin:0 0 6px}
+.approx-note{margin:6px 0 0;font:500 13px/1.5 var(--ui);color:var(--muted)}
+.stop-hidden{padding:20px 4px;color:var(--muted);font:500 13.5px/1.5 var(--ui);text-align:center;list-style:none}
+
 footer.foot{margin-top:44px;padding-top:18px;border-top:1px solid var(--line);text-align:center;color:var(--muted);font:500 12.5px/1.7 var(--ui)}
 
 /* ---------- Điện thoại ---------- */
 @media (max-width:760px){
+  .map-box{height:40vh}
+  .map-key{margin-left:0}
+  .person header{grid-template-columns:auto 1fr}
+  .person .since{grid-column:2}
   .parts li{grid-template-columns:1fr auto;gap:4px 12px}
   .parts .yr,.parts .chs{grid-column:1}
   .parts .acts{grid-column:2;grid-row:1/span 3;align-self:center;flex-direction:column}
