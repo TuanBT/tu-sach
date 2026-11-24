@@ -1,0 +1,57 @@
+<!doctype html>
+<!-- Mẫu ảnh chia sẻ 1200×630 (og.png) hiện khi dán link vào Zalo, Messenger, Facebook…
+     Không mở trực tiếp: tools/make-images.sh truyền nội dung qua ?label=&title=&sub=&meta= rồi chụp lại. -->
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@500;600;700;800&display=block">
+<style>
+  :root{--bg:#f4f3f0;--surface:#fff;--line:#dcd9d1;--fg:#1e2024;--muted:#5b6169;--a:#a8343c;--b:#2a5b8b;--ink:#24272c;--accent:#8a6120;--f:"Be Vietnam Pro",sans-serif}
+  html,body{margin:0;width:1200px;height:630px;overflow:hidden;background:var(--bg);font-family:var(--f);color:var(--fg)}
+  .card{position:absolute;inset:0;display:grid;grid-template-columns:1fr 330px;gap:40px;padding:72px 64px 64px 80px}
+  .txt{display:flex;flex-direction:column;min-width:0}
+  .label{font:700 22px/1.2 var(--f);letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}
+  h1{margin:26px 0 0;font-weight:800;font-size:100px;line-height:1.08;letter-spacing:-.03em;text-wrap:balance}
+  h1.long{font-size:78px}
+  .sub{margin-top:22px;font:500 32px/1.35 var(--f);color:var(--muted);text-wrap:balance}
+  .meta{margin-top:auto;display:flex;align-items:center;gap:18px;font:600 27px/1.2 var(--f)}
+  .meta .pill{background:var(--ink);color:var(--bg);border-radius:999px;padding:12px 22px;white-space:nowrap}
+  .meta .dom{font-weight:500;color:var(--muted)}
+  /* Hình trục thời gian bên phải, giống trang dòng thời gian */
+  .tl{position:relative}
+  .tl::before{content:"";position:absolute;left:50%;top:-12px;bottom:-12px;width:6px;margin-left:-3px;border-radius:3px;background:var(--ink)}
+  .ev{position:absolute;width:128px;height:76px;background:var(--surface);border:2px solid var(--line);border-radius:12px;box-sizing:border-box;padding:14px 14px 0 20px}
+  .ev::before{content:"";position:absolute;left:0;top:10px;bottom:10px;width:6px;border-radius:0 3px 3px 0;background:var(--c)}
+  .ev i{display:block;height:10px;border-radius:5px;background:var(--line);margin-bottom:10px}
+  .ev i+i{width:65%}
+  .ev.a{left:0;--c:var(--a)} .ev.b{right:0;--c:var(--b)}
+  .dot{position:absolute;left:50%;width:26px;height:26px;margin-left:-13px;border-radius:50%;background:var(--accent);border:5px solid var(--bg);box-sizing:border-box}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="txt">
+    <div class="label" id="label"></div>
+    <h1 id="title"></h1>
+    <div class="sub" id="sub"></div>
+    <div class="meta"><span class="pill" id="meta"></span><span class="dom">tusach.buitientuan.com</span></div>
+  </div>
+  <div class="tl">
+    <div class="ev a" style="top:10px"><i></i><i></i></div><div class="dot" style="top:35px"></div>
+    <div class="ev b" style="top:118px"><i></i><i></i></div><div class="dot" style="top:143px"></div>
+    <div class="ev a" style="top:226px"><i></i><i></i></div><div class="dot" style="top:251px"></div>
+    <div class="ev b" style="top:334px"><i></i><i></i></div><div class="dot" style="top:359px"></div>
+  </div>
+</div>
+<script>
+  const q = new URLSearchParams(location.search);
+  for (const k of ["label", "title", "sub", "meta"]) {
+    const el = document.getElementById(k), v = q.get(k) || "";
+    el.textContent = v;
+    if (!v) el.style.display = "none";
+  }
+  const t = document.getElementById("title");
+  if (t.textContent.length > 16) t.classList.add("long");
+</script>
+</body>
+</html>

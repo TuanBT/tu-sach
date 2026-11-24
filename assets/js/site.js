@@ -1,14 +1,22 @@
 /* Sổ tay đọc sách · phần dùng chung cho mọi trang:
-   thanh đường dẫn, nút sáng/tối, trang chủ (tủ sách) và trang giới thiệu một cuốn sách.
+   thanh đường dẫn, nút sáng/tối, nút cài ứng dụng, trang chủ (tủ sách) và trang giới thiệu một cuốn sách.
    Danh mục sách nằm trong data/books.js (window.BOOKS).
 
    Quy ước thư mục: mỗi cuốn sách là books/<slug>/, mỗi dạng nội dung là một thư mục con
-   (timeline/, summary/, audio/). Trang tự đọc slug từ đường dẫn, nên các file index.html
-   của mọi cuốn sách giống hệt nhau, chép sang sách mới không cần sửa. */
+   (timeline/, summary/, audio/). Trang tự đọc slug từ đường dẫn, nên phần <body> của các file
+   index.html giống hệt nhau giữa các cuốn sách; chỉ <head> khác ở tiêu đề, mô tả và ảnh chia sẻ. */
 (function () {
   const KEY = "sotay-theme";
   const SITE = "Sổ tay đọc sách";
   const root = document.documentElement;
+
+  /* Thư mục gốc của trang web, suy ra từ đường dẫn của chính file này (…/assets/js/site.js). */
+  const ROOT = ((document.currentScript && document.currentScript.src) || "").replace(/assets\/js\/site\.js(\?.*)?$/, "");
+
+  /* Service worker: cho phép cài lên điện thoại và đọc lại trang đã mở khi mất mạng. Xem sw.js. */
+  if ("serviceWorker" in navigator && /^https?:$/.test(location.protocol)) {
+    addEventListener("load", () => navigator.serviceWorker.register(ROOT + "sw.js").catch(() => {}));
+  }
 
   /* Các dạng nội dung một cuốn sách có thể có. Sách có dạng nào thì trong data/books.js
      có object cùng tên (ví dụ book.timeline). dir là thư mục con trong books/<slug>/. */
@@ -27,6 +35,12 @@
   }
   function syncLabel(btn) {
     btn.textContent = current() === "dark" ? "Giao diện sáng" : "Giao diện tối";
+    syncThemeColor();
+  }
+  /* Màu thanh trạng thái trên điện thoại theo nền trang, kể cả khi người xem tự chọn sáng/tối. */
+  function syncThemeColor() {
+    const bg = getComputedStyle(root).getPropertyValue("--bg").trim();
+    if (bg) document.querySelectorAll('meta[name="theme-color"]').forEach(m => m.setAttribute("content", bg));
   }
   function themeButton() {
     const btn = document.createElement("button");
@@ -47,6 +61,41 @@
     return btn;
   }
 
+  /* ---------- Cài lên điện thoại ----------
+     Android và Chrome máy tính: trình duyệt báo có thể cài (beforeinstallprompt), nút gọi hộp cài.
+     iPhone, iPad: không có hộp cài, nút mở dòng hướng dẫn Chia sẻ → Thêm vào MH chính.
+     Đang mở như ứng dụng rồi thì ẩn nút. */
+  let installEvt = null;
+  const standalone = () => (window.matchMedia && matchMedia("(display-mode: standalone)").matches) || navigator.standalone === true;
+  const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  addEventListener("beforeinstallprompt", e => { e.preventDefault(); installEvt = e; syncInstall(); });
+  addEventListener("appinstalled", () => { installEvt = null; syncInstall(); });
+
+  function syncInstall() {
+    const btn = document.getElementById("install");
+    if (btn) btn.hidden = standalone() || !(installEvt || isIOS);
+  }
+  const SHARE = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5v8.5M5 4.5l3-3 3 3M5 7H3.5v7.5h9V7H11" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  function installButton(tip) {
+    const btn = document.createElement("button");
+    btn.className = "btn";
+    btn.type = "button";
+    btn.id = "install";
+    btn.textContent = "Cài ứng dụng";
+    btn.addEventListener("click", async () => {
+      if (installEvt) {
+        const e = installEvt;
+        installEvt = null;
+        e.prompt();
+        await e.userChoice.catch(() => {});
+        syncInstall();
+      } else {
+        tip.hidden = !tip.hidden;
+      }
+    });
+    return btn;
+  }
+
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
   const $ = id => document.getElementById(id);
 
@@ -58,8 +107,16 @@
                                    : `<span${last ? ' aria-current="page"' : ""}>${esc(c.t)}</span>`;
       return (i ? '<span class="sep">/</span>' : "") + node;
     }).join("");
-    el.innerHTML = `<nav class="crumbs" aria-label="Đường dẫn">${parts}</nav>`;
-    el.appendChild(themeButton());
+    el.innerHTML = `<nav class="crumbs" aria-label="Đường dẫn">${parts}</nav><div class="tools"></div>`;
+
+    const tip = document.createElement("p");
+    tip.className = "install-tip";
+    tip.hidden = true;
+    tip.innerHTML = `Trên iPhone, iPad: bấm nút Chia sẻ ${SHARE} của Safari rồi chọn <b>Thêm vào MH chính</b>.`;
+    el.after(tip);
+
+    el.querySelector(".tools").append(installButton(tip), themeButton());
+    syncInstall();
   }
 
   /* ---------- Tìm cuốn sách của trang hiện tại ---------- */
